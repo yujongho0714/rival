@@ -186,8 +186,11 @@ input.name{background:var(--panel2);border:1px solid var(--line);border-radius:1
     </div>
     <div class="small" id="refStatus" style="margin-top:8px"></div>
     <div class="faces" id="refCand"></div>
-    <div class="row" id="refCandBtns" style="display:none">
-      <button class="btn pri" id="refAdd">고른 얼굴로 찾기</button><span class="small">눌러서 고르기 / 빼기</span>
+    <div class="row" id="refCandBtns" style="display:none"><span class="small">주황 테두리 얼굴로 바로 찾고 있어요. 다른 아이 얼굴이 섞여 있으면 눌러서 빼주세요.</span></div>
+    <div class="note warn" id="needLib" style="display:none">
+      👉 이제 찾을 사진·영상을 <b>한 번만</b> 골라주세요. 갤러리 창에서 <b>⋮ → 모두 선택</b>을 누르면 한꺼번에 돼요.<br>
+      한 번 분석해 두면, 다음부터는 아이 영상만 올려도 <b>바로 자동으로</b> 찾아요.
+      <div class="row" style="margin-top:8px"><label class="btn pri">갤러리·드라이브에서 고르기<input type="file" id="libFiles2" accept="image/*,video/*" multiple></label></div>
     </div>
     <div class="small" id="refSum"></div>
     <div class="refs" id="refList"></div>
@@ -549,20 +552,26 @@ $('#refFile').onchange=async e=>{
   const base=REF.pos.length?REF.pos:null;let center;
   if(base){center=null}else{const bigs=cand.filter(c=>c.big);let best=Infinity;for(const a of bigs){let s=0;for(const b of bigs)s+=dist(a.desc,b.desc);if(s<best){best=s;center=a}}}
   cand.forEach(c=>{const d=base?Math.min(...base.map(p=>dist(p.desc,c.desc))):dist(center.desc,c.desc);c.on=d<0.5});
-  renderCand();$('#refStatus').textContent=`얼굴 ${cand.length}개를 찾았어요. 찾을 아이 얼굴만 골라주세요 (주황 테두리 = 고름)`;
+  REF.name=$('#refName').value.trim();
+  for(const c of cand)if(c.on)addRefCand(c);
+  await saveRef();renderRef();renderCand();renderResults();
+  const n=cand.filter(c=>c.on).length;
+  $('#refStatus').textContent=n?`얼굴 ${cand.length}개 중 ${n}개로 바로 찾았어요`:`얼굴 ${cand.length}개를 찾았어요. 찾을 아이 얼굴을 눌러주세요`;
+  afterRef();
 };
+function addRefCand(c){if(c.ref)return;if(REF.pos.length>=60)return;const ex=REF.pos.find(p=>dist(p.desc,c.desc)<0.12);if(ex){c.ref=ex;return}c.ref={desc:c.desc,thumb:c.thumb};REF.pos.push(c.ref)}
+function afterRef(){
+  const hasLib=[...items.values()].some(i=>!i.err);
+  $('#needLib').style.display=REF.pos.length&&!hasLib&&!SCAN.running?'':'none';
+  if(REF.pos.length&&hasLib)$('#resCard').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function renderCand(){
   const box=$('#refCand');box.innerHTML='';
-  cand.forEach(c=>{const d=document.createElement('div');d.className='face'+(c.on?' on':'');d.innerHTML=`<img src="${c.thumb}">`;d.onclick=()=>{c.on=!c.on;d.classList.toggle('on',c.on)};box.appendChild(d)});
+  cand.forEach(c=>{const d=document.createElement('div');d.className='face'+(c.on?' on':'');d.innerHTML=`<img src="${c.thumb}">`;d.onclick=async()=>{c.on=!c.on;d.classList.toggle('on',c.on);
+    if(c.on)addRefCand(c);else if(c.ref){const r=c.ref;if(!cand.some(o=>o!==c&&o.on&&o.ref===r))REF.pos=REF.pos.filter(p=>p!==r);c.ref=null}
+    await saveRef();renderRef();renderSoon()};box.appendChild(d)});
   $('#refCandBtns').style.display=cand.length?'flex':'none';
 }
-$('#refAdd').onclick=async()=>{
-  const sel=cand.filter(c=>c.on);if(!sel.length){alert('찾을 아이 얼굴을 하나 이상 골라주세요');return}
-  // 비슷한 얼굴은 너무 많이 넣지 않기
-  for(const c of sel){if(REF.pos.length<40&&!REF.pos.some(p=>dist(p.desc,c.desc)<0.12))REF.pos.push({desc:c.desc,thumb:c.thumb})}
-  cand=[];$('#refCand').innerHTML='';$('#refCandBtns').style.display='none';$('#refStatus').textContent='';
-  REF.name=$('#refName').value.trim();await saveRef();renderRef();renderResults();
-};
 $('#refName').oninput=()=>{REF.name=$('#refName').value.trim();saveRef();updateTitle()};
 $('#refReset').onclick=async()=>{if(REF.pos.length&&!confirm('지금 아이 정보를 지우고 새 아이를 찾을까요? (분석한 사진·영상 기록은 그대로 남아요)'))return;
   REF={name:'',pos:[],neg:[]};$('#refName').value='';cand=[];renderCand();await saveRef();renderRef();renderResults()};
@@ -578,6 +587,7 @@ const updateTitle=()=>$('#resTitle').textContent=REF.name?`${REF.name} 찾은 �
 const SCAN={queue:[],running:false,paused:false,stop:false,done:0,total:0};
 $('#libFiles').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
 $('#libDir').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+$('#libFiles2').onchange=e=>{$('#needLib').style.display='none';addFiles([...e.target.files]);e.target.value=''};
 if(/android|iphone|ipad|mobile|tablet/i.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0)$('#dirBtn').style.display='none';
 function addFiles(fs){
   fs=fs.filter(f=>isImage(f)||isVideo(f));if(!fs.length)return;
