@@ -169,7 +169,7 @@ input.name{background:var(--panel2);border:1px solid var(--line);border-radius:1
 <div class="wrap">
   <header>
     <div class="logo">▶</div>
-    <h1>아이 영상 분석기</h1>
+    <h1>아이 영상 분석기 <span style="font-size:11px;color:#8d95a5;font-weight:400">v3</span></h1>
     <div class="stat"><span class="eng" id="eng">얼굴 인식 준비 중…</span><span class="pose" id="poseState">사람 인식 대기</span></div>
     <button class="btn pri" id="installBtn" style="display:none">📲 앱 설치</button>
   </header>
@@ -190,7 +190,7 @@ input.name{background:var(--panel2);border:1px solid var(--line);border-radius:1
     <div class="note warn" id="needLib" style="display:none">
       👉 이제 찾을 사진·영상을 <b>한 번만</b> 골라주세요. <b>파일</b> 창에서 <b>DCIM → Camera</b> 폴더(또는 ☰ → 동영상) → 하나 길게 누르기 → <b>⋮ → 모두 선택</b>.<br>
       한 번 분석해 두면, 다음부터는 아이 영상만 올려도 <b>바로 자동으로</b> 찾아요.
-      <div class="row" style="margin-top:8px"><label class="btn pri">📂 파일 창에서 한꺼번에 고르기<input type="file" id="libFiles2" multiple></label></div>
+      <div class="row" style="margin-top:8px"><label class="btn pri">📂 파일 창에서 한꺼번에 고르기<input type="file" id="libFiles2" accept="video/*,image/*,application/octet-stream,application/pdf" multiple></label></div>
     </div>
     <div class="small" id="refSum"></div>
     <div class="refs" id="refList"></div>
@@ -201,7 +201,7 @@ input.name{background:var(--panel2);border:1px solid var(--line);border-radius:1
     <p class="sub">폰 갤러리나 구글 드라이브에서 여러 개를 한꺼번에 고르세요. PC는 폴더째 고를 수 있어요.</p>
     <div class="note">📱 <b>한꺼번에 고르는 법</b>: [📂 파일 창에서 한꺼번에 고르기] → (앱 고르는 창이 뜨면 <b>파일</b> 또는 <b>내 파일</b>) → 왼쪽 위 ☰ 에서 <b>동영상</b>·<b>이미지</b> 또는 <b>DCIM → Camera</b> 폴더 (드라이브는 ☰ → <b>Drive</b>) → 아무 파일이나 <b>길게 눌러</b> 선택 → 오른쪽 위 <b>⋮ → 모두 선택</b> → [선택]<br>사진·영상이 아닌 파일이 섞여도 알아서 빼요.</div>
     <div class="row">
-      <label class="btn pri">📂 파일 창에서 한꺼번에 고르기<input type="file" id="libFiles" multiple></label>
+      <label class="btn pri">📂 파일 창에서 한꺼번에 고르기<input type="file" id="libFiles" accept="video/*,image/*,application/octet-stream,application/pdf" multiple></label>
       <label class="btn">사진 앱에서 몇 개만<input type="file" id="libFiles3" accept="image/*,video/*" multiple></label>
       <label class="btn" id="dirBtn">폴더 고르기 (PC)<input type="file" id="libDir" webkitdirectory multiple></label>
     </div>
