@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>동작 비교 분석기</title>
+<style>
+:root{
+  --bg:#0d0f13;--panel:#161920;--panel2:#1e222b;--line:#2a2f3a;--text:#eceff4;--muted:#8d95a5;
+  --a:#ff9a2e;--b:#36c8df;--ok:#4ade80;--warn:#fbbf24;--err:#f87171;--r:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:1280px;margin:0 auto;padding:12px 16px 40px}
+header{display:flex;align-items:center;gap:10px;padding:6px 0 12px}
+header h1{font-size:20px;margin:0;letter-spacing:-.3px}
+header .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--a),#ff5f2e);display:grid;place-items:center;font-weight:800;color:#111}
+header .pose{margin-left:auto;font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:4px 10px;border-radius:99px;white-space:nowrap}
+header .pose.ok{color:var(--ok)} header .pose.err{color:var(--warn)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.clips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.clip{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px;min-width:0;position:relative}
+.clip[data-i="0"]{border-top:3px solid var(--a)} .clip[data-i="1"]{border-top:3px solid var(--b)}
+.clip .head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.tag{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-weight:800;color:#111;font-size:13px}
+.clip[data-i="0"] .tag{background:var(--a)} .clip[data-i="1"] .tag{background:var(--b)}
+.clip .label{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:14px}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1.5px dashed #3a4150;border-radius:10px;padding:18px 8px;text-align:center;color:var(--muted);cursor:pointer;font-size:14px}
+.drop b{color:var(--text);font-size:15px}
+.drop:hover{border-color:var(--a)}
+.drop input{display:none}
+.vbox{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/10;display:none}
+.vbox video{width:100%;height:100%;object-fit:contain;display:block}
+.has .vbox{display:block} .has .drop{display:none}
+.meta{font-size:12px;color:var(--muted);margin:6px 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.date{display:flex;gap:6px;align-items:center;font-size:13px;margin:4px 0}
+.date input{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 6px;min-width:0;flex:1;color-scheme:dark}
+.small{font-size:11.5px;color:var(--muted)}
+.trim{margin-top:6px}
+.trim input[type=range]{width:100%}
+.trim .btns{display:flex;gap:6px;align-items:center;margin-top:4px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:13px}
+.btn:hover{border-color:#4a5262}
+.btn,.chips button{white-space:nowrap}
+header h1{white-space:nowrap}
+@media (max-width:520px){
+  .wrap{padding:10px 10px 30px}
+  header{flex-wrap:wrap}
+  header .pose{margin-left:0;white-space:normal;font-size:11px}
+  .clips{gap:8px}.clip{padding:8px}
+  .trim .btns{flex-wrap:wrap}.trimTxt{font-size:11px}
+  .date{font-size:12px}
+}
+.btn.pri{background:var(--a);border-color:var(--a);color:#111;font-weight:700}
+.btn.big{padding:12px 16px;font-size:16px;width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.status{font-size:12px;margin-top:6px;color:var(--muted);min-height:17px}
+.status.ok{color:var(--ok)} .status.err{color:var(--err)} .status.run{color:var(--warn)}
+.bar{height:4px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-top:4px;display:none}
+.bar i{display:block;height:100%;width:0;background:var(--warn);transition:width .2s}
+.running .bar{display:block}
+.replace{position:absolute;top:10px;right:10px;font-size:12px;padding:3px 8px;display:none}
+.has .replace{display:block}
+.clip:not(.has) .date,.clip:not(.has) .trim,.clip:not(.has) .dsrc{display:none}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.cvwrap{position:relative;display:flex;justify-content:center;background:#08090b;border-radius:10px;overflow:hidden}
+#view{display:block;touch-action:none;max-width:100%}
+.hint{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:14px;pointer-events:none;padding:20px}
+.ctrl{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ctrl .play{width:46px;height:46px;border-radius:50%;background:var(--a);border:0;color:#111;font-size:18px;font-weight:800;flex:none}
+.ctrl .ic{width:38px;height:38px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);flex:none}
+.scrub{flex:1;min-width:160px;display:flex;flex-direction:column;gap:2px}
+.scrub input{width:100%}
+.scrub .tm{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--a);height:26px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{background:var(--panel2);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px}
+.chips button.on{background:var(--a);border-color:var(--a);color:#111;font-weight:700}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{flex:1;background:none;border:0;padding:11px 6px;font-size:14px;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--text);border-bottom-color:var(--a);font-weight:700}
+.tab{display:none;padding:14px}
+.tab.on{display:block}
+.fld{margin-bottom:16px}
+.fld>label,.fld>.lb{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.fld .sl{display:flex;align-items:center;gap:8px}
+.fld .sl input{flex:1}
+.fld .sl output{min-width:42px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:12px}
+.tog input{width:20px;height:20px;accent-color:var(--a)}
+.note{font-size:12.5px;color:var(--muted);background:var(--panel2);border-radius:10px;padding:9px 11px;margin-bottom:12px}
+.note.warn{color:var(--warn)}
+.info{font-size:13px;margin:6px 0 12px;color:var(--text)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.modal .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;width:min(460px,100%);max-height:92vh;overflow:auto}
+.modal h3{margin:0 0 10px;font-size:17px}
+.pbar{height:10px;background:var(--panel2);border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.pbar i{display:block;height:100%;width:0;background:var(--a)}
+.modal video{width:100%;max-height:52vh;background:#000;border-radius:10px;margin:8px 0}
+.modal .row .btn{flex:1}
+.steps{display:flex;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.steps span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">▶</div>
+    <h1>동작 비교 분석기</h1>
+    <span class="pose" id="poseState">사람 인식 준비 중…</span>
+  </header>
+  <div class="steps"><span>① 영상 A·B 올리기</span><span>② 자동 분석 (흔들림·사람·동작 구간)</span><span>③ 재생해서 비교</span><span>④ 영상으로 내보내기</span></div>
+
+  <div class="grid">
+    <div>
+      <div class="clips">
+        <div class="clip" data-i="0"></div>
+        <div class="clip" data-i="1"></div>
+      </div>
+      <div class="stage">
+        <div class="cvwrap" id="cvwrap">
+          <canvas id="view" width="720" height="640"></canvas>
+          <div class="hint" id="hint">위에서 비교할 영상 두 개를 올려주세요</div>
+        </div>
+        <div class="ctrl">
+          <button class="play" id="playBtn" title="재생 (스페이스)">▶</button>
+          <button class="ic" id="stepB" title="한 프레임 뒤로">◀︎◀︎</button>
+          <button class="ic" id="stepF" title="한 프레임 앞으로">▶︎▶︎</button>
+          <div class="scrub">
+            <input type="range" id="scrub" min="0" max="1000" value="0" step="1">
+            <div class="tm"><span id="tCur">0:00.0</span><span id="tSync"></span><span id="tDur">0:00.0</span></div>
+          </div>
+        </div>
+        <div class="ctrl">
+          <div class="chips" id="speedChips">
+            <button data-v="0.25">0.25배</button><button data-v="0.5">0.5배</button><button data-v="1" class="on">1배</button>
+          </div>
+          <label class="small" style="display:flex;align-items:center;gap:5px;margin-left:auto"><input type="checkbox" id="loopChk" checked style="accent-color:var(--a)"> 반복</label>
+          <label class="small" style="display:flex;align-items:center;gap:5px"><input type="checkbox" id="soundChk" style="accent-color:var(--a)"> 소리</label>
+        </div>
+        <div class="small" style="margin-top:8px">화면을 끌면 그 영상 위치 이동 · 두 손가락(또는 마우스 휠)으로 확대 · 두 번 누르면 원래대로</div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="tabs" id="tabs">
+        <button data-t="t-stab" class="on">보정</button>
+        <button data-t="t-sync">속도</button>
+        <button data-t="t-view">화면</button>
+        <button data-t="t-stamp">날짜</button>
+        <button data-t="t-exp">내보내기</button>
+      </div>
+
+      <div class="tab on" id="t-stab">
+        <div class="fld"><div class="lb">흔들림·크기 보정 방식</div>
+          <div class="chips" data-key="stab">
+            <button data-v="person">사람 고정 + 크기 맞춤</button>
+            <button data-v="shake">흔들림만 보정</button>
+            <button data-v="off">끄기</button>
+          </div>
+        </div>
+        <div class="note" id="stabNote">사람 고정: 아이를 항상 화면 가운데·같은 크기로 맞추고 카메라 흔들림을 없애요. 두 영상의 키·거리가 달라도 크기가 똑같이 맞춰져요.</div>
+        <div class="fld" data-show="stab!=off"><label>보정 강도</label>
+          <div class="sl"><input type="range" min="1" max="5" step="1" data-key="strength"><output data-out="strength"></output></div>
+        </div>
+        <div class="fld" data-show="stab=person"><label>사람 크기</label>
+          <div class="sl"><input type="range" min="0.6" max="1.6" step="0.05" data-key="psize"><output data-out="psize"></output></div>
+        </div>
+        <div class="row" style="margin-bottom:12px">
+          <button class="btn" id="resetMan">위치·확대 초기화</button>
+          <button class="btn" id="reAna">다시 분석</button>
+        </div>
+      </div>
+
+      <div class="tab" id="t-sync">
+        <div class="fld"><div class="lb">기준 영상 (원래 속도로 재생)</div>
+          <div class="chips" data-key="ref" data-num="1">
+            <button data-v="0">A 기준</button><button data-v="1">B 기준</button>
+          </div>
+        </div>
+        <div class="fld"><div class="lb">속도 맞추는 방법</div>
+          <div class="chips" data-key="sync">
+            <button data-v="dtw">동작 하나하나 자동 맞춤</button>
+            <button data-v="trim">시작·끝만 맞춤</button>
+          </div>
+        </div>
+        <div class="note" id="syncNote"></div>
+        <div class="info" id="syncInfo"></div>
+        <div class="row" style="margin-bottom:14px">
+          <button class="btn" id="autoTrim">동작 시작·끝 자동 찾기</button>
+        </div>
+        <div class="fld"><label>미세 조정 (다른 영상을 앞/뒤로)</label>
+          <div class="sl"><input type="range" min="-1.5" max="1.5" step="0.05" data-key="nudge"><output data-out="nudge"></output></div>
+        </div>
+        <div class="small">시작·끝은 위쪽 각 영상 카드에서 직접 정할 수도 있어요. (영상 카드 막대를 움직이고 [시작] / [끝])</div>
+      </div>
+
+      <div class="tab" id="t-view">
+        <div class="fld"><div class="lb">배치</div>
+          <div class="chips" data-key="layout">
+            <button data-v="side">좌우</button><button data-v="stack">위아래</button><button data-v="overlay">겹쳐보기</button>
+          </div>
+        </div>
+        <div class="fld"><div class="lb">한 칸 비율</div>
+          <div class="chips" data-key="aspect">
+            <button data-v="9:16">9:16 세로</button><button data-v="3:4">3:4</button><button data-v="1:1">1:1</button><button data-v="16:9">16:9 가로</button>
+          </div>
+        </div>
+        <div class="fld" data-show="layout=overlay"><label>위에 겹친 영상(B) 투명도</label>
+          <div class="sl"><input type="range" min="0.15" max="0.85" step="0.05" data-key="alpha"><output data-out="alpha"></output></div>
+        </div>
+        <label class="tog">관절 뼈대 표시 (사람 인식 필요) <input type="checkbox" data-key="skel"></label>
+        <div class="row"><button class="btn" id="swapBtn">A ⇄ B 자리 바꾸기</button></div>
+      </div>
+
+      <div class="tab" id="t-stamp">
+        <label class="tog">날짜 스탬프 넣기 <input type="checkbox" data-key="stampOn"></label>
+        <div class="fld"><div class="lb">표시 형식</div>
+          <div class="chips" data-key="stampFmt">
+            <button data-v="dot">2026.10.24</button><button data-v="time">2026.10.24 12:16</button><button data-v="kor">2026년 10월 24일</button><button data-v="film">'26 10 24</button>
+          </div>
+        </div>
+        <div class="fld"><div class="lb">색</div>
+          <div class="chips" data-key="stampColor">
+            <button data-v="#ffa133">주황</button><button data-v="#ffe14d">노랑</button><button data-v="#ffffff">흰색</button><button data-v="#ff5a4e">빨강</button>
+          </div>
+        </div>
+        <div class="fld"><label>크기</label>
+          <div class="sl"><input type="range" min="0.6" max="1.8" step="0.05" data-key="stampSize"><output data-out="stampSize"></output></div>
+        </div>
+        <label class="tog">영상 이름(A·B 칸에 쓴 이름)도 같이 표시 <input type="checkbox" data-key="stampLabel"></label>
+        <div class="small">날짜는 파일 이름 → 영상 정보 → 파일 시각 순서로 자동으로 찾아요. 틀리면 위쪽 영상 카드에서 바꿔주세요.</div>
+      </div>
+
+      <div class="tab" id="t-exp">
+        <div class="fld"><div class="lb">화질 (한 칸 높이)</div>
+          <div class="chips" data-key="expH" data-num="1">
+            <button data-v="960">보통</button><button data-v="1280">고화질</button><button data-v="1920">최고</button>
+          </div>
+        </div>
+        <div class="fld"><div class="lb">내보내기 속도</div>
+          <div class="chips" data-key="expSpeed" data-num="1">
+            <button data-v="1">1배</button><button data-v="0.5">0.5배 슬로우</button>
+          </div>
+        </div>
+        <label class="tog">정밀 모드 (느리지만 프레임 하나하나 정확하게) <input type="checkbox" data-key="expExact"></label>
+        <div class="note">지금 화면에 보이는 그대로(보정·속도 맞춤·날짜 스탬프 포함) 기준 영상의 시작~끝 구간을 MP4로 만들어요. 소리는 들어가지 않아요.</div>
+        <button class="btn pri big" id="expBtn">영상으로 내보내기</button>
+        <div class="small" id="expInfo" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="box">
+  <h3 id="mTitle">영상 만드는 중…</h3>
+  <div id="mRun">
+    <div class="pbar"><i id="mBar"></i></div>
+    <div class="small" id="mTxt">준비 중</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="mCancel">취소</button></div>
+  </div>
+  <div id="mDone" style="display:none">
+    <video id="mVideo" controls playsinline></video>
+    <div class="small" id="mSize"></div>
+    <div class="row" style="margin-top:10px">
+      <a class="btn pri" id="mSave" download style="text-align:center;text-decoration:none">기기에 저장</a>
+      <button class="btn" id="mShare">공유하기</button>
+      <button class="btn" id="mClose">닫기</button>
+    </div>
+  </div>
+</div></div>
+
+<script type="module">
+/* =========================================================
+   동작 비교 분석기 — 단일 파일 웹앱
+   - 흔들림 보정: 배경 블록 매칭 → 카메라 궤적 → 부드럽게
+   - 사람 고정/크기 맞춤: MediaPipe Pose (인터넷 필요, 없으면 흔들림 보정만)
+   - 속도 맞춤: 구간 선형 또는 포즈 DTW(동작 단위)
+   - 내보내기: WebCodecs(H.264) + 자체 MP4 작성, 안 되면 MediaRecorder
+   ========================================================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const pad=n=>String(n).padStart(2,'0');
+const fmtT=t=>{if(!isFinite(t)||t<0)t=0;const m=Math.floor(t/60),s=t-m*60;return m+':'+(s<10?'0':'')+s.toFixed(1)};
+
+/* ---------------- 설정 ---------------- */
+const DEF={stab:'person',strength:3,psize:1,ref:0,sync:'dtw',nudge:0,layout:'side',aspect:'9:16',alpha:0.5,skel:false,
+  stampOn:true,stampFmt:'dot',stampColor:'#ffa133',stampSize:1,stampLabel:true,expH:1280,expSpeed:1,expExact:false};
+const S=Object.assign({},DEF);
+try{const o=JSON.parse(localStorage.getItem('motion-compare-settings')||'{}');for(const k in DEF)if(k in o&&k!=='nudge')S[k]=o[k]}catch(e){}
+const saveS=()=>{try{localStorage.setItem('motion-compare-settings',JSON.stringify(S))}catch(e){}};
+
+/* ---------------- 상태 ---------------- */
+const clips=[0,1].map(i=>({i,file:null,url:null,v:null,W:0,H:0,dur:0,fps:30,date:null,dateSrc:'',label:'',
+  trimS:0,trimE:0,ana:null,trk:null,man:{z:1,x:0,y:0},busy:false,cancel:false,lastIdx:-1,autoTrimmed:false}));
+const P={playing:false,speed:1,dirty:true,looping:false,loop:true,sound:false};
+const EXP={on:false,cancel:false,mode:''};
+let dtwMap=null; // null = 아직, false = 불가, {tr,to}
+
+/* ---------------- 사람 인식 (MediaPipe) ---------------- */
+let poseLM=null, poseTs=0;
+const MP_VER='0.10.14';
+const poseReady=(async()=>{
+  const el=$('#poseState');
+  try{
+    let mod=null;
+    for(const u of [`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`,`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/+esm`]){
+      try{mod=await import(u);break}catch(e){console.warn('pose import',u,e)}
+    }
+    if(!mod) throw new Error('import');
+    const fs=await mod.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
+    const opt=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',delegate:d},
+      runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:0.4,minPosePresenceConfidence:0.4,minTrackingConfidence:0.4});
+    try{poseLM=await mod.PoseLandmarker.createFromOptions(fs,opt('GPU'))}
+    catch(e){console.warn('GPU 실패, CPU로',e);poseLM=await mod.PoseLandmarker.createFromOptions(fs,opt('CPU'))}
+    el.textContent='사람 인식 준비됨';el.className='pose ok';
+  }catch(e){
+    console.warn(e);poseLM=null;el.textContent='사람 인식 불가 · 흔들림 보정만';el.className='pose err';
+  }
+  refreshNotes();
+})();
+
+/* ---------------- 영상 카드 ---------------- */
+function cardHTML(i){return `
+  <div class="head"><span class="tag">${i?'B':'A'}</span><input class="label" placeholder="${i?'예: 지금':'예: 처음'}" maxlength="20"></div>
+  <button class="btn replace">바꾸기</button>
+  <label class="drop"><b>영상 ${i?'B':'A'} 올리기</b><span>눌러서 선택 또는 끌어다 놓기</span><input type="file" accept="video/*"></label>
+  <div class="vbox"></div>
+  <div class="meta"></div>
+  <div class="date"><span>📅</span><input type="datetime-local" class="dt"></div>
+  <div class="small dsrc"></div>
+  <div class="trim">
+    <input type="range" class="pos" min="0" max="1000" value="0">
+    <div class="btns"><button class="btn tS">시작</button><button class="btn tE">끝</button><span class="small trimTxt"></span></div>
+  </div>
+  <div class="status"></div><div class="bar"><i></i></div>`}
+const cards=$$('.clip');
+cards.forEach((card,i)=>{
+  card.innerHTML=cardHTML(i);
+  const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.setAttribute('playsinline','');
+  clips[i].v=v;$('.vbox',card).appendChild(v);
+  bindCard(card);
+});
+function cardOf(c){return cards[c.i]}
+function bindCard(card){
+  const ci=()=>clips[+card.dataset.i];
+  const inp=$('input[type=file]',card);
+  inp.onchange=()=>{if(inp.files[0])loadFile(ci(),inp.files[0]);inp.value=''};
+  $('.replace',card).onclick=()=>inp.click();
+  card.addEventListener('dragover',e=>{e.preventDefault()});
+  card.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f)loadFile(ci(),f)});
+  $('.label',card).oninput=e=>{ci().label=e.target.value;P.dirty=true};
+  $('.dt',card).onchange=e=>{const d=new Date(e.target.value);if(!isNaN(d)){ci().date=d;ci().dateSrc='직접 입력';renderCard(ci());P.dirty=true}};
+  $('.pos',card).oninput=e=>{const c=ci();if(!c.W||busy())return;pause();c.v.currentTime=e.target.value/1000*c.dur;P.dirty=true};
+  $('.tS',card).onclick=()=>{const c=ci();if(!c.W)return;c.trimS=clamp(c.v.currentTime,0,c.trimE-0.3);onTrim()};
+  $('.tE',card).onclick=()=>{const c=ci();if(!c.W)return;c.trimE=clamp(c.v.currentTime,c.trimS+0.3,c.dur);onTrim()};
+}
+function onTrim(){dtwMap=null;clips.forEach(renderCard);updateSyncInfo();updateScrub();P.dirty=true}
+function setStatus(c,txt,cls='',pct=null){
+  const card=cardOf(c),st=$('.status',card);st.textContent=txt;st.className='status '+cls;
+  card.classList.toggle('running',pct!=null);if(pct!=null)$('.bar i',card).style.width=(pct*100).toFixed(1)+'%';
+  updateHint();
+}
+function renderCard(c){
+  const card=cardOf(c);card.classList.toggle('has',!!c.W);
+  $('.label',card).value=c.label;
+  if(!c.W){$('.meta',card).textContent='';$('.dsrc',card).textContent='';$('.trimTxt',card).textContent='';return}
+  $('.meta',card).textContent=`${c.file?c.file.name:''} · ${fmtT(c.dur)} · ${c.W}×${c.H}`;
+  if(c.date){const d=c.date;$('.dt',card).value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`}
+  $('.dsrc',card).textContent=c.dateSrc?`날짜: ${c.dateSrc}에서 찾음`:'';
+  $('.trimTxt',card).textContent=`${fmtT(c.trimS)} ~ ${fmtT(c.trimE)}`;
+  const a=c.trimS/c.dur*100,b=c.trimE/c.dur*100,col=c.i?'#36c8df':'#ff9a2e';
+  $('.pos',card).style.background=`linear-gradient(90deg,transparent ${a}%,${col}55 ${a}%,${col}55 ${b}%,transparent ${b}%)`;
+  $('.pos',card).style.borderRadius='6px';
+}
+
+/* ---------------- 날짜 찾기 ---------------- */
+function parseNameDate(n){
+  const m=n.match(/(20\d{2})[-_.]?([01]\d)[-_.]?([0-3]\d)(?:[ _\-T.]?([0-2]\d)[-_.:]?([0-5]\d)(?:[-_.:]?([0-5]\d))?)?/);
+  if(!m)return null;const y=+m[1],mo=+m[2],d=+m[3];if(mo<1||mo>12||d<1||d>31)return null;
+  let h=m[4]?+m[4]:0,mi=m[5]?+m[5]:0,s=m[6]?+m[6]:0;if(h>23){h=0;mi=0;s=0}
+  const dt=new Date(y,mo-1,d,h,mi,s);return isNaN(dt)?null:dt;
+}
+async function mp4Date(file){
+  const rd=async(o,n)=>new DataView(await file.slice(o,o+n).arrayBuffer());
+  const typ=(dv,p)=>String.fromCharCode(dv.getUint8(p+4),dv.getUint8(p+5),dv.getUint8(p+6),dv.getUint8(p+7));
+  let off=0;
+  for(let k=0;k<200&&off+8<=file.size;k++){
+    const h=await rd(off,16);let bs=h.getUint32(0),hd=8;const t=typ(h,0);
+    if(bs===1){bs=Number(h.getBigUint64(8));hd=16}else if(bs===0)bs=file.size-off;
+    if(bs<8)break;
+    if(t==='moov'){
+      const mv=await rd(off+hd,Math.min(bs-hd,1<<20));let p=0;
+      while(p+16<=mv.byteLength){const cs=mv.getUint32(p);if(typ(mv,p)==='mvhd'){
+        const ver=mv.getUint8(p+8);const secs=ver===1?Number(mv.getBigUint64(p+12)):mv.getUint32(p+12);
+        return secs>2082844800+946684800?new Date((secs-2082844800)*1000):null}
+        if(cs<8)break;p+=cs}
+      return null;
+    }
+    off+=bs;
+  }
+  return null;
+}
+async function detectDate(file){
+  const n=parseNameDate(file.name);if(n)return{date:n,src:'파일 이름'};
+  try{const m=await mp4Date(file);if(m)return{date:m,src:'영상 정보'}}catch(e){}
+  return{date:new Date(file.lastModified||Date.now()),src:'파일 저장 시각'};
+}
+
+/* ---------------- 파일 열기 ---------------- */
+function seek(v,t){
+  t=clamp(t,0,Math.max(0,(v.duration||0)-0.001));
+  if(Math.abs(v.currentTime-t)<1e-4&&!v.seeking)return Promise.resolve();
+  return new Promise(res=>{let ok=false;const done=()=>{if(ok)return;ok=true;v.removeEventListener('seeked',done);res()};
+    v.addEventListener('seeked',done);v.currentTime=t;setTimeout(done,4000)});
+}
+async function loadFile(c,file){
+  pause();c.cancel=true;await sleep(30);
+  if(c.url)URL.revokeObjectURL(c.url);
+  Object.assign(c,{file,ana:null,trk:null,man:{z:1,x:0,y:0},W:0,H:0,dur:0,cancel:false,autoTrimmed:false,lastIdx:-1});
+  dtwMap=null;c.label=c.label||'';renderCard(c);
+  c.url=URL.createObjectURL(file);const v=c.v;
+  setStatus(c,'영상 여는 중…','run');
+  try{
+    await new Promise((res,rej)=>{v.onloadedmetadata=res;v.onerror=()=>rej(new Error('err'));setTimeout(()=>rej(new Error('timeout')),25000);v.src=c.url;v.load()});
+    if(!v.videoWidth)throw new Error('novideo');
+  }catch(e){setStatus(c,'이 브라우저에서 열 수 없는 영상이에요. 크롬 최신 버전으로 열거나, 다른 형식(H.264)으로 저장해서 올려주세요.','err');return}
+  v.onloadedmetadata=null;v.onerror=null;
+  c.W=v.videoWidth;c.H=v.videoHeight;c.dur=v.duration;c.trimS=0;c.trimE=c.dur;
+  await seek(v,0.05);
+  const d=await detectDate(file);c.date=d.date;c.dateSrc=d.src;
+  renderCard(c);resizeView();updateScrub();updateSyncInfo();P.dirty=true;
+  queueAnalysis(c);
+}
+for(const c of clips){
+  c.v.addEventListener('seeked',()=>{P.dirty=true;if(!P.playing)updateScrub()});
+}
+
+/* ---------------- 분석 ---------------- */
+let anaChain=Promise.resolve();
+function busy(){return clips.some(c=>c.busy)||EXP.on}
+function queueAnalysis(c){
+  c.busy=true;setStatus(c,'분석 대기 중…','run',0);
+  anaChain=anaChain.then(()=>analyze(c)).catch(e=>{console.error(e);c.busy=false;setStatus(c,'분석 중 문제가 생겼어요: '+e.message,'err')});
+}
+function toGray(d,n){const g=new Float32Array(n);for(let i=0,j=0;i<n;i++,j+=4)g[i]=d[j]*0.299+d[j+1]*0.587+d[j+2]*0.114;return g}
+function down(L){const w=L.w>>1,h=L.h>>1,o=new Float32Array(w*h),s=L.d,W=L.w;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=2*y*W+2*x;o[y*w+x]=(s[i]+s[i+1]+s[i+W]+s[i+W+1])*0.25}return{d:o,w,h}}
+function para(a,b,c){const d=a-2*b+c;return d>1e-9?clamp(0.5*(a-c)/d,-0.5,0.5):0}
+// 전체 이동 (평균 밝기 차 보정 SAD)
+function gshift(P,Q,R,cx,cy){
+  const w=P.w,h=P.h,m=R+Math.max(Math.abs(cx),Math.abs(cy))+1;
+  const x0=m,x1=w-m,y0=m,y1=h-m;if(x1-x0<8||y1-y0<8)return{x:cx,y:cy,cost:0};
+  let mp=0,mq=0,cnt=0;for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){mp+=P.d[y*w+x];mq+=Q.d[y*w+x];cnt++}
+  const off=(mq-mp)/cnt,Sz=2*R+1,C=new Float32Array(Sz*Sz);let best=Infinity,bi=0;
+  for(let j=0;j<Sz;j++){const sy=cy+j-R;for(let i=0;i<Sz;i++){const sx=cx+i-R;let s=0;
+    for(let y=y0;y<y1;y++){const pr=y*w,qr=(y+sy)*w+sx;for(let x=x0;x<x1;x++){const d=Q.d[qr+x]-P.d[pr+x]-off;s+=d<0?-d:d}}
+    C[j*Sz+i]=s;if(s<best){best=s;bi=j*Sz+i}}}
+  const bj=(bi/Sz)|0,bx=bi%Sz;let fx=0,fy=0;
+  if(bx>0&&bx<Sz-1)fx=para(C[bj*Sz+bx-1],best,C[bj*Sz+bx+1]);
+  if(bj>0&&bj<Sz-1)fy=para(C[(bj-1)*Sz+bx],best,C[(bj+1)*Sz+bx]);
+  return{x:cx+bx-R+fx,y:cy+bj-R+fy,cost:best/cnt};
+}
+// 배경 블록별 이동
+function blockVecs(P,Q,gx,gy,R,bbox){
+  const w=P.w,h=P.h,hb=6,N=4*hb*hb,step=14,m=hb+R+Math.max(Math.abs(gx),Math.abs(gy))+2;const cand=[];
+  for(let by=m;by<h-m;by+=step)for(let bx=m;bx<w-m;bx+=step){
+    if(bbox&&bx>bbox[0]&&bx<bbox[2]&&by>bbox[1]&&by<bbox[3])continue;
+    let a=0,b=0;for(let y=by-hb;y<by+hb;y++)for(let x=bx-hb;x<bx+hb;x++){const i=y*w+x;a+=Math.abs(P.d[i+1]-P.d[i]);b+=Math.abs(P.d[i+w]-P.d[i])}
+    const tex=Math.min(a,b)/N;if(tex>=2.2)cand.push([bx,by,tex]);
+  }
+  cand.sort((p,q)=>q[2]-p[2]);const out=[],Sz=2*R+1,C=new Float32Array(Sz*Sz);
+  for(const [bx,by] of cand.slice(0,160)){
+    let mp=0;for(let y=by-hb;y<by+hb;y++)for(let x=bx-hb;x<bx+hb;x++)mp+=P.d[y*w+x];mp/=N;
+    let best=Infinity,bi=0;
+    for(let j=0;j<Sz;j++){const sy=gy+j-R;for(let i=0;i<Sz;i++){const sx=gx+i-R;let mq=0;
+      for(let y=by-hb;y<by+hb;y++){const r=(y+sy)*w+sx;for(let x=bx-hb;x<bx+hb;x++)mq+=Q.d[r+x]}mq/=N;const off=mq-mp;let s=0;
+      for(let y=by-hb;y<by+hb;y++){const r=(y+sy)*w+sx,pr=y*w;for(let x=bx-hb;x<bx+hb;x++){const d=Q.d[r+x]-P.d[pr+x]-off;s+=d<0?-d:d}}
+      C[j*Sz+i]=s;if(s<best){best=s;bi=j*Sz+i}}}
+    const bj=(bi/Sz)|0,bxx=bi%Sz;if(bxx===0||bxx===Sz-1||bj===0||bj===Sz-1)continue;
+    const fx=para(C[bj*Sz+bxx-1],best,C[bj*Sz+bxx+1]),fy=para(C[(bj-1)*Sz+bxx],best,C[(bj+1)*Sz+bxx]);
+    out.push({x:bx-w/2,y:by-h/2,vx:gx+bxx-R+fx,vy:gy+bj-R+fy});
+  }
+  return out;
+}
+function simFit(ps){
+  const n=ps.length;let mx=0,my=0,qx=0,qy=0;for(const p of ps){mx+=p.x;my+=p.y;qx+=p.x+p.vx;qy+=p.y+p.vy}
+  mx/=n;my/=n;qx/=n;qy/=n;let sxx=0,a=0,b=0;
+  for(const p of ps){const px=p.x-mx,py=p.y-my,ux=p.x+p.vx-qx,uy=p.y+p.vy-qy;sxx+=px*px+py*py;a+=px*ux+py*uy;b+=px*uy-py*ux}
+  if(sxx/n<200){return{a:1,b:0,dx:qx-mx,dy:qy-my,da:0,ds:0}}
+  a/=sxx;b/=sxx;let da=Math.atan2(b,a),ds=Math.log(Math.hypot(a,b));
+  if(Math.abs(da)>0.06||Math.abs(ds)>0.06){return{a:1,b:0,dx:qx-mx,dy:qy-my,da:0,ds:0}}
+  return{a,b,dx:qx-(a*mx-b*my),dy:qy-(b*mx+a*my),da,ds};
+}
+const resid=(A,p)=>Math.hypot(A.a*p.x-A.b*p.y+A.dx-(p.x+p.vx),A.b*p.x+A.a*p.y+A.dy-(p.y+p.vy));
+function robustFit(pts){
+  if(pts.length<5)return null;
+  let best=-1,bv=null;
+  for(const a of pts){let c=0;for(const b of pts)if(Math.abs(a.vx-b.vx)<1.2&&Math.abs(a.vy-b.vy)<1.2)c++;if(c>best){best=c;bv=a}}
+  let inl=pts.filter(p=>Math.hypot(p.vx-bv.vx,p.vy-bv.vy)<2.5),A=null;
+  for(let it=0;it<4&&inl.length>=4;it++){
+    A=simFit(inl);const r=pts.map(p=>resid(A,p));const ri=inl.map(p=>resid(A,p)).sort((x,y)=>x-y);
+    const th=Math.max(0.8,3*ri[ri.length>>1]);inl=pts.filter((p,k)=>r[k]<th);
+  }
+  if(!A||inl.length<4)return{dx:bv.vx,dy:bv.vy,da:0,ds:0,n:1};
+  return{dx:A.dx,dy:A.dy,da:A.da,ds:A.ds,n:inl.length};
+}
+function estimate(A,B,bbox){
+  const g2=gshift(A[2],B[2],10,0,0);
+  const g1=gshift(A[1],B[1],2,Math.round(g2.x*2),Math.round(g2.y*2));
+  const pts=blockVecs(A[0],B[0],Math.round(g1.x*2),Math.round(g1.y*2),3,bbox);
+  const f=robustFit(pts);
+  if(!f)return{dx:g1.x*2,dy:g1.y*2,da:0,ds:0,act:g1.cost,n:0};
+  return{...f,act:g1.cost};
+}
+
+async function analyze(c){
+  if(!c.W){c.busy=false;return}
+  pause();c.busy=true;c.cancel=false;c.ana=null;c.trk=null;dtwMap=null;
+  setStatus(c,'사람 인식 준비 기다리는 중…','run',0);
+  await Promise.race([poseReady,sleep(30000)]);
+  const PL=window.__poseHook||poseLM,usePose=!!PL,v=c.v;
+  const aw=240,ah=Math.max(16,Math.round(aw*c.H/c.W/4)*4);
+  const acv=document.createElement('canvas');acv.width=aw;acv.height=ah;const actx=acv.getContext('2d',{willReadFrequently:true});
+  const pw=320,ph=Math.round(pw*c.H/c.W);
+  const pcv=document.createElement('canvas');pcv.width=pw;pcv.height=ph;const pctx=pcv.getContext('2d');
+  const samples=[];let prev=null,lastT=-1;poseTs+=2000;
+  const proc=t=>{
+    if(t<=lastT+1e-4)return;
+    actx.drawImage(v,0,0,aw,ah);
+    const g=toGray(actx.getImageData(0,0,aw,ah).data,aw*ah);
+    const L0={d:g,w:aw,h:ah},L1=down(L0),L2=down(L1),pyr=[L0,L1,L2];
+    let pose=null,bbox=null;
+    if(usePose){
+      pctx.drawImage(v,0,0,pw,ph);
+      poseTs+=Math.max(1,Math.round((lastT<0?0.033:t-lastT)*1000));
+      try{const r=PL.detectForVideo(pcv,poseTs);const lm=r&&r.landmarks&&r.landmarks[0];
+        if(lm){pose=new Float32Array(66);let x0=1,y0=1,x1=0,y1=0;
+          for(let k=0;k<33;k++){pose[2*k]=lm[k].x;pose[2*k+1]=lm[k].y;
+            if((lm[k].visibility??1)>0.3){x0=Math.min(x0,lm[k].x);x1=Math.max(x1,lm[k].x);y0=Math.min(y0,lm[k].y);y1=Math.max(y1,lm[k].y)}}
+          if(x1>x0){const ex=(x1-x0)*0.25+0.03,ey=(y1-y0)*0.12+0.03;bbox=[(x0-ex)*aw,(y0-ey)*ah,(x1+ex)*aw,(y1+ey)*ah]}}
+      }catch(e){console.warn(e)}
+    }
+    const m=prev?estimate(prev,pyr,bbox):{dx:0,dy:0,da:0,ds:0,act:0,n:0};
+    samples.push({t,dx:m.dx,dy:m.dy,da:m.da,ds:m.ds,act:m.act,pose});
+    prev=pyr;lastT=t;
+  };
+  setStatus(c,'분석 중 0%','run',0);
+  await seek(v,0);
+  const ok='requestVideoFrameCallback' in HTMLVideoElement.prototype&&await playScan(c,proc);
+  if(!ok&&!c.cancel)await seekScan(c,proc);
+  v.pause();v.playbackRate=1;
+  if(c.cancel){c.busy=false;return}
+  // 원본 fps 추정
+  const dts=[];for(let i=1;i<samples.length;i++){const d=samples[i].t-samples[i-1].t;if(d>0.004)dts.push(d)}
+  dts.sort((a,b)=>a-b);const md=dts.length?dts[Math.floor(dts.length*0.1)]:1/30;c.fps=clamp(Math.round(1/md),10,120);
+  const np=samples.filter(s=>s.pose).length;
+  c.ana={aw,ah,samples,usePose,poseRatio:samples.length?np/samples.length:0};
+  buildTrack(c);
+  if(!c.autoTrimmed){autoTrim(c);c.autoTrimmed=true}
+  c.busy=false;
+  const pr=c.ana.poseRatio;
+  setStatus(c,`분석 완료 · ${usePose?(pr>0.3?`사람 인식 ${Math.round(pr*100)}%`:'사람을 거의 못 찾음'):'흔들림 보정만'} · 동작 구간 자동 설정`,'ok');
+  await seek(v,c.trimS);
+  renderCard(c);updateScrub();updateSyncInfo();refreshNotes();P.dirty=true;
+}
+function playScan(c,fn){
+  const v=c.v;
+  return new Promise(async res=>{
+    let done=false,rate=1.5,winWall=performance.now(),winMedia=null,winCnt=0,lastCb=performance.now(),got=0;
+    const finish=r=>{if(done)return;done=true;clearInterval(wd);v.pause();res(r)};
+    const cb=(now,meta)=>{
+      if(done)return;if(c.cancel){finish(true);return}
+      lastCb=performance.now();got++;const t=meta.mediaTime;
+      try{fn(t)}catch(e){console.error(e)}
+      winCnt++;if(winMedia===null)winMedia=t;
+      const wall=performance.now();
+      if(wall-winWall>1500){const md=t-winMedia,pf=md>0?winCnt/md:30;
+        if(pf<14&&rate>0.35)rate=Math.max(0.35,rate*0.7);else if(pf>24&&rate<2)rate=Math.min(2,rate*1.25);
+        v.playbackRate=rate;winWall=wall;winMedia=t;winCnt=0}
+      setStatus(c,`분석 중 ${Math.round(t/c.dur*100)}%`,'run',t/c.dur);
+      if(v.ended||t>=c.dur-0.05)finish(true);else v.requestVideoFrameCallback(cb);
+    };
+    const wd=setInterval(()=>{
+      if(done)return;
+      if(v.ended){setTimeout(()=>finish(got>5),120);return}
+      if(performance.now()-lastCb>6000){if(got<3)finish(false);else{v.play().catch(()=>{});lastCb=performance.now()}}
+    },500);
+    v.requestVideoFrameCallback(cb);v.playbackRate=rate;v.muted=true;
+    try{await v.play()}catch(e){finish(false)}
+  });
+}
+async function seekScan(c,fn){
+  const step=1/15;
+  for(let t=0;t<c.dur&&!c.cancel;t+=step){await seek(c.v,t);fn(c.v.currentTime);setStatus(c,`분석 중 ${Math.round(t/c.dur*100)}%`,'run',t/c.dur)}
+}
+
+/* ---------------- 궤적 / 보정 ---------------- */
+function lsm(t,y,sig){ // 가우시안 가중 국소 선형 회귀 (끝부분도 자연스럽게)
+  const n=t.length,o=new Float64Array(n);let lo=0,hi=0;
+  for(let i=0;i<n;i++){const ti=t[i];while(t[lo]<ti-3*sig)lo++;if(hi<i)hi=i;while(hi<n-1&&t[hi+1]<=ti+3*sig)hi++;
+    let S0=0,S1=0,S2=0,Y0=0,Y1=0;
+    for(let j=lo;j<=hi;j++){const d=t[j]-ti,w=Math.exp(-d*d/(2*sig*sig));S0+=w;S1+=w*d;S2+=w*d*d;Y0+=w*y[j];Y1+=w*d*y[j]}
+    const det=S0*S2-S1*S1;o[i]=det>1e-9*S0*S0?(S2*Y0-S1*Y1)/det:Y0/S0}
+  return o;
+}
+function fillNaN(a){const n=a.length;let last=-1;
+  for(let i=0;i<n;i++){if(!isNaN(a[i])){if(last<0)for(let j=0;j<i;j++)a[j]=a[i];else for(let j=last+1;j<i;j++)a[j]=a[last]+(a[i]-a[last])*(j-last)/(i-last);last=i}}
+  if(last>=0)for(let j=last+1;j<n;j++)a[j]=a[last];return a}
+function medf(a,w){const n=a.length,o=new Float64Array(n),h=w>>1,buf=[];
+  for(let i=0;i<n;i++){buf.length=0;for(let j=Math.max(0,i-h);j<=Math.min(n-1,i+h);j++)buf.push(a[j]);buf.sort((x,y)=>x-y);o[i]=buf[buf.length>>1]}return o}
+const SPAN=5.0; // 한 칸 높이 = 몸통 길이의 5배
+function buildTrack(c){
+  const A=c.ana;if(!A||A.samples.length<3){c.trk=null;return}
+  const s=A.samples,n=s.length,k=c.W/A.aw;
+  const t=new Float64Array(n),Tx=new Float64Array(n),Ty=new Float64Array(n),Ta=new Float64Array(n),Tl=new Float64Array(n);
+  for(let i=0;i<n;i++){t[i]=s[i].t;if(i){Tx[i]=Tx[i-1]+s[i].dx*k;Ty[i]=Ty[i-1]+s[i].dy*k;Ta[i]=Ta[i-1]+s[i].da;Tl[i]=Tl[i-1]+s[i].ds}}
+  const sig=[0.25,0.5,1,2,5][clamp(S.strength,1,5)-1];
+  const trk={t,mode:'shake',cx:new Float64Array(n),cy:new Float64Array(n),rot:new Float64Array(n),mul:new Float64Array(n),zN:null,crop:1};
+  const wantPerson=S.stab==='person'&&A.poseRatio>0.3;
+  if(wantPerson){
+    const hx=new Float64Array(n),hy=new Float64Array(n),L=new Float64Array(n);
+    for(let i=0;i<n;i++){const p=s[i].pose;if(!p){hx[i]=hy[i]=L[i]=NaN;continue}
+      const X=j=>p[2*j]*c.W,Y=j=>p[2*j+1]*c.H;
+      const hX=(X(23)+X(24))/2,hY=(Y(23)+Y(24))/2,sX=(X(11)+X(12))/2,sY=(Y(11)+Y(12))/2;
+      hx[i]=hX;hy[i]=hY;L[i]=Math.hypot(sX-hX,sY-hY)}
+    fillNaN(hx);fillNaN(hy);fillNaN(L);
+    const mx=medf(hx,5),my=medf(hy,5);
+    const wx=new Float64Array(n),wy=new Float64Array(n);for(let i=0;i<n;i++){wx[i]=mx[i]-Tx[i];wy[i]=my[i]-Ty[i]}
+    const psig=[0.15,0.25,0.4,0.6,0.9][clamp(S.strength,1,5)-1];
+    const sx=lsm(t,wx,psig),sy=lsm(t,wy,psig),Ls=lsm(t,medf(L,9),1.0),Sa=lsm(t,Ta,0.6);
+    trk.mode='person';trk.zN=new Float64Array(n);
+    for(let i=0;i<n;i++){const l=Math.max(Ls[i],c.H*0.02);trk.cx[i]=sx[i]+Tx[i];trk.cy[i]=sy[i]+Ty[i]-0.1*l;trk.rot[i]=Ta[i]-Sa[i];trk.mul[i]=1;trk.zN[i]=1/(SPAN*l)}
+  }else{
+    const Sx=lsm(t,Tx,sig),Sy=lsm(t,Ty,sig),Sa=lsm(t,Ta,Math.min(sig,1)),Sl=lsm(t,Tl,sig);const need=[];
+    for(let i=0;i<n;i++){const dx=Sx[i]-Tx[i],dy=Sy[i]-Ty[i];trk.cx[i]=c.W/2-dx;trk.cy[i]=c.H/2-dy;trk.rot[i]=Ta[i]-Sa[i];trk.mul[i]=Math.exp(Sl[i]-Tl[i]);
+      need.push((1+2*Math.max(Math.abs(dx)/c.W,Math.abs(dy)/c.H))*(1+Math.abs(trk.rot[i])*1.6)/Math.min(1,trk.mul[i]))}
+    need.sort((a,b)=>a-b);trk.crop=clamp(need[Math.floor(need.length*0.95)]||1,1,1.3);
+  }
+  c.trk=trk;
+}
+function viewAt(c,t){
+  const T=c.trk;if(!T||S.stab==='off')return null;const a=T.t,n=a.length;
+  let lo=0,hi=n-1;if(t<=a[0])hi=0;else if(t>=a[n-1])lo=hi=n-1;else{while(hi-lo>1){const m=(lo+hi)>>1;if(a[m]<=t)lo=m;else hi=m}}
+  const f=hi>lo?(t-a[lo])/(a[hi]-a[lo]):0,L=(arr)=>arr[lo]+(arr[hi]-arr[lo])*f;
+  return{cx:L(T.cx),cy:L(T.cy),rot:L(T.rot),mul:L(T.mul),zN:T.zN?L(T.zN):null,crop:T.crop};
+}
+function poseAt(c,t){
+  const s=c.ana&&c.ana.samples;if(!s||!s.length)return null;
+  let lo=0,hi=s.length-1;if(t<=s[0].t)hi=0;else if(t>=s[hi].t)lo=hi;else{while(hi-lo>1){const m=(lo+hi)>>1;if(s[m].t<=t)lo=m;else hi=m}}
+  const A=s[lo].pose,B=s[hi].pose;
+  if(A&&B&&hi>lo){const f=(t-s[lo].t)/(s[hi].t-s[lo].t),o=new Float32Array(66);for(let k=0;k<66;k++)o[k]=A[k]+(B[k]-A[k])*f;return o}
+  if(A&&Math.abs(s[lo].t-t)<0.2)return A;if(B&&Math.abs(s[hi].t-t)<0.2)return B;return null;
+}
+
+/* ---------------- 동작 구간 / 속도 맞춤 ---------------- */
+const KP=[0,11,12,13,14,15,16,23,24,25,26,27,28];
+const SWAP={11:12,12:11,13:14,14:13,15:16,16:15,23:24,24:23,25:26,26:25,27:28,28:27,0:0};
+function hipL(c,p){const X=j=>p[2*j]*c.W,Y=j=>p[2*j+1]*c.H;const hx=(X(23)+X(24))/2,hy=(Y(23)+Y(24))/2;return{hx,hy,L:Math.hypot((X(11)+X(12))/2-hx,(Y(11)+Y(12))/2-hy)}}
+function energy(c){
+  const s=c.ana.samples,n=s.length,e=new Float64Array(n),t=new Float64Array(n);
+  const usePose=c.ana.poseRatio>0.3;
+  for(let i=0;i<n;i++){t[i]=s[i].t;
+    if(usePose){const p=s[i].pose,q=i?s[i-1].pose:null;
+      if(p&&q){const a=hipL(c,p),b=hipL(c,q),L=Math.max(a.L,1);let sum=0;
+        for(const j of [13,14,15,16,25,26,27,28]){sum+=Math.hypot((p[2*j]*c.W-a.hx)-(q[2*j]*c.W-b.hx),(p[2*j+1]*c.H-a.hy)-(q[2*j+1]*c.H-b.hy))/L}
+        sum+=Math.hypot(a.hx-b.hx-s[i].dx*c.W/c.ana.aw,a.hy-b.hy-s[i].dy*c.W/c.ana.aw)/L*2;
+        e[i]=sum/Math.max(0.01,s[i].t-s[i-1].t)}else e[i]=NaN}
+    else e[i]=s[i].act}
+  fillNaN(e);return{t,e:lsm(t,medf(e,5),0.3)};
+}
+function autoTrim(c){
+  if(!c.ana||c.ana.samples.length<10)return;
+  const{t,e}=energy(c);const srt=[...e].sort((a,b)=>a-b);
+  const lo=srt[Math.floor(srt.length*0.08)],hi=srt[Math.floor(srt.length*0.9)];if(!(hi>lo))return;
+  const th=lo+(hi-lo)*0.22;let a=-1,b=-1;
+  for(let i=0;i<t.length;i++){if(e[i]>th){let j=i;while(j<t.length&&e[j]>th)j++;if(t[Math.min(j,t.length-1)]-t[i]>0.4){a=i;break}i=j}}
+  for(let i=t.length-1;i>=0;i--){if(e[i]>th){b=i;break}}
+  if(a<0||b<=a)return;
+  const s=Math.max(0,t[a]-0.4),en=Math.min(c.dur,t[b]+0.6);
+  if(en-s>1.5){c.trimS=s;c.trimE=en}
+}
+function feats(c,t0,t1,hz){
+  const s=c.ana.samples,n=Math.max(2,Math.round((t1-t0)*hz)+1),Ls=[];
+  for(const x of s)if(x.pose)Ls.push(hipL(c,x.pose).L);if(Ls.length<5)return null;Ls.sort((a,b)=>a-b);const Lm=Math.max(1,Ls[Ls.length>>1]);
+  const out=new Array(n);let j=0;
+  for(let i=0;i<n;i++){const t=t0+i/hz;while(j<s.length-1&&s[j+1].t<=t)j++;
+    const p=poseAt(c,t);if(!p){out[i]=null;continue}
+    const h=hipL(c,p),f=new Float32Array(KP.length*2),g=new Float32Array(KP.length*2);
+    KP.forEach((k,m)=>{f[2*m]=(p[2*k]*c.W-h.hx)/Lm;f[2*m+1]=(p[2*k+1]*c.H-h.hy)/Lm;const q=SWAP[k];g[2*m]=(p[2*q]*c.W-h.hx)/Lm;g[2*m+1]=(p[2*q+1]*c.H-h.hy)/Lm});
+    out[i]=[f,g]}
+  let last=null;for(let i=0;i<n;i++){if(out[i])last=out[i];else out[i]=last}
+  last=null;for(let i=n-1;i>=0;i--){if(out[i])last=out[i];else out[i]=last}
+  return out[0]?out:null;
+}
+function computeDTW(){
+  const R=refC(),O=othC();
+  if(!R||!O||!R.ana||!O.ana||R.ana.poseRatio<0.3||O.ana.poseRatio<0.3)return false;
+  const hz=10,FA=feats(R,R.trimS,R.trimE,hz),FB=feats(O,O.trimS,O.trimE,hz);if(!FA||!FB)return false;
+  const n=FA.length,m=FB.length,d=new Float32Array(n*m);
+  for(let i=0;i<n;i++){const a=FA[i][0];for(let j=0;j<m;j++){const b=FB[j][0],bs=FB[j][1];let s1=0,s2=0;
+    for(let k=0;k<a.length;k++){const x=a[k]-b[k],y=a[k]-bs[k];s1+=x*x;s2+=y*y}d[i*m+j]=Math.sqrt(Math.min(s1,s2))}}
+  const smp=[];for(let k=0;k<2000;k++)smp.push(d[(Math.random()*n*m)|0]);smp.sort((a,b)=>a-b);const pen=smp[smp.length>>1]*0.35;
+  const D=new Float32Array(n*m),B=new Uint8Array(n*m);
+  for(let i=0;i<n;i++)for(let j=0;j<m;j++){const k=i*m+j;
+    if(!i&&!j){D[k]=d[k];continue}
+    let best=Infinity,bb=0;
+    if(i&&j&&D[k-m-1]<best){best=D[k-m-1];bb=0}
+    if(i&&D[k-m]+pen<best){best=D[k-m]+pen;bb=1}
+    if(j&&D[k-1]+pen<best){best=D[k-1]+pen;bb=2}
+    D[k]=d[k]+best;B[k]=bb}
+  const sumJ=new Float64Array(n),cnt=new Float64Array(n);let i=n-1,j=m-1;
+  while(true){sumJ[i]+=j;cnt[i]++;if(!i&&!j)break;const b=B[i*m+j];if(b===0){i--;j--}else if(b===1)i--;else j--}
+  const tr=new Float64Array(n),to=new Float64Array(n);for(let k=0;k<n;k++){tr[k]=R.trimS+k/hz;to[k]=O.trimS+(sumJ[k]/cnt[k])/hz}
+  let sm=lsm(tr,to,0.45);
+  const minS=0.25/hz,maxS=4/hz;sm[0]=O.trimS;
+  for(let k=1;k<n;k++)sm[k]=clamp(sm[k],sm[k-1]+minS,sm[k-1]+maxS);
+  // 끝점도 맞추기
+  const endErr=O.trimE-sm[n-1];for(let k=0;k<n;k++)sm[k]+=endErr*(k/(n-1));
+  return{tr,to:sm};
+}
+function refC(){const r=clips[S.ref];return r.W?r:(clips[1-S.ref].W?clips[1-S.ref]:null)}
+function othC(){const r=refC();if(!r)return null;const o=clips[1-r.i];return o.W?o:null}
+function linMap(R,O,t){const r=(O.trimE-O.trimS)/Math.max(0.1,R.trimE-R.trimS);return O.trimS+(t-R.trimS)*r}
+function mapT(t){
+  const R=refC(),O=othC();if(!O)return 0;let u;
+  if(S.sync==='dtw'){if(dtwMap===null)dtwMap=computeDTW()||false;}
+  if(S.sync==='dtw'&&dtwMap){const{tr,to}=dtwMap,n=tr.length;
+    if(t<=tr[0])u=to[0]+(t-tr[0]);else if(t>=tr[n-1])u=to[n-1]+(t-tr[n-1]);
+    else{const f=(t-tr[0])*10,k=Math.min(n-2,Math.floor(f)),r=f-k;u=to[k]+(to[k+1]-to[k])*r}}
+  else u=linMap(R,O,t);
+  return clamp(u+S.nudge,0,Math.max(0,O.dur-0.02));
+}
+const slopeAt=t=>(mapT(t+0.15)-mapT(t-0.15))/0.3||1;
+function updateSyncInfo(){
+  const R=refC(),O=othC(),el=$('#syncInfo');
+  if(!R||!O){el.textContent='영상 두 개를 올리면 속도를 자동으로 맞춰요.';return}
+  const r=(O.trimE-O.trimS)/Math.max(0.1,R.trimE-R.trimS);
+  const nm=c=>c.i?'B':'A';
+  let txt=`기준 ${nm(R)}: ${fmtT(R.trimS)}~${fmtT(R.trimE)} (${(R.trimE-R.trimS).toFixed(1)}초) · ${nm(O)}: ${fmtT(O.trimS)}~${fmtT(O.trimE)} (${(O.trimE-O.trimS).toFixed(1)}초)\n→ ${nm(O)}를 평균 ${r.toFixed(2)}배 속도로 재생`;
+  if(S.sync==='dtw'){if(dtwMap===null&&R.ana&&O.ana)dtwMap=computeDTW()||false;txt+=dtwMap?' (동작마다 속도가 달라져요)':''}
+  el.style.whiteSpace='pre-line';el.textContent=txt;
+  refreshNotes();
+}
+
+/* ---------------- 그리기 ---------------- */
+const BONES=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32],[27,29],[28,30],[15,19],[16,20]];
+function aspectNum(){const[a,b]=S.aspect.split(':').map(Number);return a/b}
+function dimsFor(ph){const ar=aspectNum();ph=Math.round(ph/8)*8;const pw=Math.round(ph*ar/8)*8;
+  if(S.layout==='side')return{W:pw*2,H:ph,ph,pw};if(S.layout==='stack')return{W:pw,H:ph*2,ph,pw};return{W:pw,H:ph,ph,pw}}
+function panels(d){
+  if(S.layout==='side')return[[0,0,0,d.pw,d.ph],[1,d.pw,0,d.pw,d.ph]];
+  if(S.layout==='stack')return[[0,0,0,d.pw,d.ph],[1,0,d.ph,d.pw,d.ph]];
+  return[[0,0,0,d.pw,d.ph],[1,0,0,d.pw,d.ph]];
+}
+function drawPanel(ctx,c,t,x,y,w,h,alpha){
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  if(!c.W){ctx.fillStyle='#14161b';ctx.fillRect(x,y,w,h);ctx.fillStyle='#5b6372';ctx.font=`600 ${Math.round(h*0.035)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(`영상 ${c.i?'B':'A'}를 올려주세요`,x+w/2,y+h/2);ctx.restore();return}
+  const vw=viewAt(c,t);let cx=c.W/2,cy=c.H/2,rot=0,z=Math.max(w/c.W,h/c.H);
+  if(vw){cx=vw.cx;cy=vw.cy;rot=vw.rot;if(vw.zN!=null)z=vw.zN*h*S.psize;else z*=vw.mul*vw.crop}
+  z*=c.man.z;
+  ctx.globalAlpha=alpha;
+  ctx.translate(x+w/2+c.man.x*h,y+h/2+c.man.y*h);ctx.scale(z,z);ctx.rotate(-rot);ctx.translate(-cx,-cy);
+  ctx.drawImage(c.v,0,0,c.W,c.H);
+  if(S.skel&&c.ana){const p=poseAt(c,t);if(p){
+    ctx.globalAlpha=Math.min(1,alpha+0.3);ctx.strokeStyle=c.i?'#36c8df':'#ff9a2e';ctx.lineWidth=h*0.007/z;ctx.lineCap='round';ctx.beginPath();
+    for(const[a,b]of BONES){ctx.moveTo(p[2*a]*c.W,p[2*a+1]*c.H);ctx.lineTo(p[2*b]*c.W,p[2*b+1]*c.H)}ctx.stroke();
+    ctx.fillStyle='#fff';for(const k of[0,13,14,15,16,25,26,27,28]){ctx.beginPath();ctx.arc(p[2*k]*c.W,p[2*k+1]*c.H,h*0.006/z,0,7);ctx.fill()}}}
+  ctx.restore();
+}
+function stampText(c){
+  const d=c.date;if(!d)return'';const Y=d.getFullYear(),M=d.getMonth()+1,D=d.getDate();
+  switch(S.stampFmt){case'time':return`${Y}.${pad(M)}.${pad(D)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    case'kor':return`${Y}년 ${M}월 ${D}일`;case'film':return`'${String(Y).slice(2)} ${M} ${pad(D)}`;default:return`${Y}.${pad(M)}.${pad(D)}`}
+}
+function drawStamp(ctx,c,x,y,h,line,dot){
+  if(!c.W)return;const txt=S.stampOn?stampText(c):'',lab=S.stampLabel?c.label.trim():'';if(!txt&&!lab)return;
+  const fs=Math.round(h*0.038*S.stampSize),pd=Math.round(h*0.028),yy=y+pd+line*fs*1.45;let xx=x+pd;
+  ctx.save();ctx.textBaseline='top';ctx.lineJoin='round';
+  if(dot){ctx.fillStyle=c.i?'#36c8df':'#ff9a2e';ctx.beginPath();ctx.arc(xx+fs*0.3,yy+fs*0.5,fs*0.28,0,7);ctx.fill();xx+=fs*0.85}
+  if(txt){
+    ctx.font=`700 ${fs}px "Courier New",ui-monospace,Menlo,monospace`;
+    ctx.lineWidth=fs*0.2;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.strokeText(txt,xx,yy);
+    ctx.shadowColor=S.stampColor;ctx.shadowBlur=fs*0.35;ctx.fillStyle=S.stampColor;ctx.fillText(txt,xx,yy);ctx.shadowBlur=0;
+    xx+=ctx.measureText(txt).width+fs*0.5}
+  if(lab){ctx.font=`700 ${Math.round(fs*0.9)}px -apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif`;
+    ctx.lineWidth=fs*0.18;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.strokeText(lab,xx,yy+fs*0.06);ctx.fillStyle='#fff';ctx.fillText(lab,xx,yy+fs*0.06)}
+  ctx.restore();
+}
+function compose(ctx,d,times){
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.fillStyle='#0b0c0f';ctx.fillRect(0,0,d.W,d.H);
+  const T=i=>times&&times[i]!=null?times[i]:clips[i].v.currentTime;
+  const ov=S.layout==='overlay';
+  for(const[i,x,y,w,h]of panels(d)){
+    if(ov&&i===1&&!clips[1].W)continue;
+    drawPanel(ctx,clips[i],T(i),x,y,w,h,ov&&i===1&&clips[0].W?S.alpha:1);
+  }
+  if(S.layout==='side'){ctx.fillStyle='#0b0c0f';ctx.fillRect(d.pw-1,0,2,d.H)}
+  if(S.layout==='stack'){ctx.fillStyle='#0b0c0f';ctx.fillRect(0,d.ph-1,d.W,2)}
+  if(ov){drawStamp(ctx,clips[0],0,0,d.ph,0,true);drawStamp(ctx,clips[1],0,0,d.ph,1,true)}
+  else for(const[i,x,y,w,h]of panels(d))drawStamp(ctx,clips[i],x,y,h,0,false);
+}
+
+/* ---------------- 미리보기 ---------------- */
+const view=$('#view'),vctx=view.getContext('2d');let vd=dimsFor(640);
+function resizeView(){
+  const wrap=$('#cvwrap'),cw=wrap.clientWidth||600,mh=Math.min(innerHeight*0.66,760);
+  const base=dimsFor(1000),ar=base.W/base.H;let w=cw,h=w/ar;if(h>mh){h=mh;w=h*ar}
+  const dpr=Math.min(2,devicePixelRatio||1);const ph=clamp(Math.round(h*dpr*(base.ph/base.H)),240,1080);
+  vd=dimsFor(ph);view.width=vd.W;view.height=vd.H;view.style.width=Math.round(w)+'px';view.style.height=Math.round(w/(vd.W/vd.H))+'px';
+  P.dirty=true;
+}
+addEventListener('resize',resizeView);
+function updateHint(){
+  const h=$('#hint');const any=clips.some(c=>c.W);
+  const run=clips.find(c=>c.busy);
+  if(!any){h.textContent='위에서 비교할 영상 두 개를 올려주세요';h.style.display='grid'}
+  else if(run){h.innerHTML=`<div style="background:rgba(0,0,0,.6);padding:10px 16px;border-radius:10px;color:#fff">영상 ${run.i?'B':'A'} 분석 중… ${$('.status',cardOf(run)).textContent.replace(/[^0-9%]/g,'')}<br><span style="font-size:12px;color:#aab">흔들림·사람 위치·동작 구간을 찾고 있어요</span></div>`;h.style.display='grid'}
+  else h.style.display='none';
+}
+function updatePlayBtn(){$('#playBtn').textContent=P.playing?'❚❚':'▶'}
+async function play(){
+  if(busy())return;const R=refC();if(!R)return;const O=othC();
+  let t=R.v.currentTime;if(t<R.trimS-0.05||t>=R.trimE-0.06){t=R.trimS;await seek(R.v,t)}
+  if(O)await seek(O.v,mapT(t));
+  P.playing=true;updatePlayBtn();
+  R.v.muted=!P.sound;R.v.playbackRate=P.speed;R.v.play().catch(()=>{});
+  if(O){O.v.muted=true;O.v.playbackRate=clamp(P.speed*slopeAt(t),0.0625,8);O.v.play().catch(()=>{})}
+}
+function pause(){P.playing=false;clips.forEach(c=>{if(c.W&&!c.busy)c.v.pause()});updatePlayBtn();P.dirty=true}
+function syncOther(R,O,t,speed){
+  if(O.v.seeking)return;const target=mapT(t),err=target-O.v.currentTime;
+  if(target>=O.dur-0.05){if(!O.v.paused)O.v.pause();return}
+  if(Math.abs(err)>0.3){O.v.currentTime=target+0.04*speed;return}
+  const rate=clamp(speed*slopeAt(t)*(1+clamp(err*1.6,-0.45,0.45)),0.0625,8);
+  if(Math.abs(rate-O.v.playbackRate)>0.015*rate)O.v.playbackRate=rate;
+  if(O.v.paused&&!R.v.paused)O.v.play().catch(()=>{});
+}
+function updateScrub(t){
+  const R=refC();if(!R){$('#tCur').textContent=$('#tDur').textContent='0:00.0';return}
+  if(t==null)t=R.v.currentTime;const sc=$('#scrub');sc.value=Math.round(t/R.dur*1000);
+  $('#tCur').textContent=fmtT(t);$('#tDur').textContent=fmtT(R.dur);
+  const O=othC();$('#tSync').textContent=O?`${O.i?'B':'A'} ${fmtT(O.v.currentTime)}`:'';
+  const a=R.trimS/R.dur*100,b=R.trimE/R.dur*100;
+  sc.style.background=`linear-gradient(90deg,transparent ${a}%,rgba(255,154,46,.3) ${a}%,rgba(255,154,46,.3) ${b}%,transparent ${b}%)`;sc.style.borderRadius='6px';
+  clips.forEach(c=>{if(c.W)$('.pos',cardOf(c)).value=Math.round(c.v.currentTime/c.dur*1000)});
+}
+function tick(){
+  requestAnimationFrame(tick);
+  if(EXP.on&&EXP.mode!=='rec')return;
+  if(EXP.on)return;
+  const R=refC();
+  if(P.playing&&R&&!P.looping){
+    const t=R.v.currentTime,O=othC();
+    if(t>=R.trimE-0.02||R.v.ended){
+      if(P.loop){P.looping=true;(async()=>{R.v.pause();if(O)O.v.pause();await seek(R.v,R.trimS);if(O)await seek(O.v,mapT(R.trimS));
+        if(P.playing){R.v.play().catch(()=>{});if(O){O.v.playbackRate=clamp(P.speed*slopeAt(R.trimS),0.0625,8);O.v.play().catch(()=>{})}}P.looping=false})()}
+      else pause();
+    }else if(O)syncOther(R,O,t,P.speed);
+    updateScrub(t);
+  }
+  if(P.playing||P.dirty){compose(vctx,vd,null);P.dirty=false}
+}
+$('#playBtn').onclick=()=>P.playing?pause():play();
+async function step(dir){if(busy())return;pause();const R=refC();if(!R)return;const t=clamp(R.v.currentTime+dir/R.fps,0,R.dur);await seek(R.v,t);const O=othC();if(O)await seek(O.v,mapT(t));updateScrub(t)}
+$('#stepB').onclick=()=>step(-1);$('#stepF').onclick=()=>step(1);
+$('#scrub').oninput=e=>{if(busy())return;const R=refC();if(!R)return;pause();const t=e.target.value/1000*R.dur;R.v.currentTime=t;const O=othC();if(O)O.v.currentTime=mapT(t);$('#tCur').textContent=fmtT(t)};
+$$('#speedChips button').forEach(b=>b.onclick=()=>{P.speed=+b.dataset.v;$$('#speedChips button').forEach(x=>x.classList.toggle('on',x===b));const R=refC();if(P.playing&&R){R.v.playbackRate=P.speed}});
+$('#loopChk').onchange=e=>P.loop=e.target.checked;
+$('#soundChk').onchange=e=>{P.sound=e.target.checked;const R=refC();if(R)R.v.muted=!P.sound};
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type!=='range')return;
+  if(e.code==='Space'){e.preventDefault();P.playing?pause():play()}else if(e.code==='ArrowRight'){e.preventDefault();step(1)}else if(e.code==='ArrowLeft'){e.preventDefault();step(-1)}});
+
+// 화면 끌기 / 확대
+const ptrs=new Map();let gest=null;
+function panelAt(ev){const r=view.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*vd.W,y=(ev.clientY-r.top)/r.height*vd.H;
+  if(S.layout==='overlay')return clips[1].W?1:0;if(S.layout==='side')return x<vd.pw?0:1;return y<vd.ph?0:1}
+const cssPH=()=>view.getBoundingClientRect().height*(vd.ph/vd.H);
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===1)gest={ci:panelAt(e)};else if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest.d0=Math.hypot(a.x-b.x,a.y-b.y);gest.z0=clips[gest.ci].man.z}});
+view.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId)||!gest)return;const p=ptrs.get(e.pointerId),c=clips[gest.ci];
+  if(ptrs.size===1){c.man.x+=(e.clientX-p.x)/cssPH();c.man.y+=(e.clientY-p.y)/cssPH()}
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2&&gest.d0){const[a,b]=[...ptrs.values()];c.man.z=clamp(gest.z0*Math.hypot(a.x-b.x,a.y-b.y)/gest.d0,0.3,5)}
+  P.dirty=true});
+const up=e=>{ptrs.delete(e.pointerId);if(!ptrs.size)gest=null;else if(gest)gest.d0=0};
+view.addEventListener('pointerup',up);view.addEventListener('pointercancel',up);
+view.addEventListener('wheel',e=>{e.preventDefault();const c=clips[panelAt(e)];c.man.z=clamp(c.man.z*Math.exp(-e.deltaY*0.0015),0.3,5);P.dirty=true},{passive:false});
+view.addEventListener('dblclick',e=>{clips[panelAt(e)].man={z:1,x:0,y:0};P.dirty=true});
+
+/* ---------------- 설정 UI ---------------- */
+function syncControls(){
+  $$('.chips[data-key]').forEach(g=>{const k=g.dataset.key;$$('button',g).forEach(b=>b.classList.toggle('on',String(S[k])===b.dataset.v))});
+  $$('input[data-key]').forEach(i=>{const k=i.dataset.key;if(i.type==='checkbox')i.checked=!!S[k];else i.value=S[k]});
+  $$('output[data-out]').forEach(o=>{const k=o.dataset.out,v=S[k];
+    o.textContent=k==='strength'?['약','조금','보통','강','최강'][v-1]:k==='nudge'?(v>0?'+':'')+(+v).toFixed(2)+'초':k==='alpha'?Math.round(v*100)+'%':(+v).toFixed(2)+'배'});
+  $$('[data-show]').forEach(el=>{const[k,v]=el.dataset.show.split(/!?=/),neg=el.dataset.show.includes('!=');el.style.display=(String(S[k])===v)!==neg?'':'none'});
+}
+function onSetting(k){
+  saveS();syncControls();
+  if(k==='stab'||k==='strength')clips.forEach(buildTrack);
+  if(k==='ref'||k==='sync'){dtwMap=null;updateSyncInfo();updateScrub()}
+  if(k==='layout'||k==='aspect')resizeView();
+  if(k==='nudge')updateSyncInfo();
+  refreshNotes();P.dirty=true;
+}
+$$('.chips[data-key]').forEach(g=>$$('button',g).forEach(b=>b.onclick=()=>{if(busy()&&['stab','strength'].includes(g.dataset.key)){}const k=g.dataset.key;S[k]=g.dataset.num?+b.dataset.v:b.dataset.v;onSetting(k)}));
+$$('input[data-key]').forEach(i=>i.addEventListener('input',()=>{const k=i.dataset.key;S[k]=i.type==='checkbox'?i.checked:+i.value;onSetting(k)}));
+$$('#tabs button').forEach(b=>b.onclick=()=>{$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));$$('.tab').forEach(t=>t.classList.toggle('on',t.id===b.dataset.t))});
+$('#resetMan').onclick=()=>{clips.forEach(c=>c.man={z:1,x:0,y:0});P.dirty=true};
+$('#reAna').onclick=()=>{if(busy())return;clips.forEach(c=>{if(c.W){c.autoTrimmed=false;queueAnalysis(c)}})};
+$('#autoTrim').onclick=()=>{if(busy())return;let any=false;clips.forEach(c=>{if(c.ana){autoTrim(c);any=true}});if(any)onTrim()};
+$('#swapBtn').onclick=async()=>{
+  if(busy())return;pause();[clips[0],clips[1]]=[clips[1],clips[0]];clips.forEach((c,i)=>{c.i=i;$('.vbox',cards[i]).appendChild(c.v)});
+  S.ref=1-S.ref;dtwMap=null;clips.forEach(c=>{renderCard(c);const card=cardOf(c);if(!c.W){$('.status',card).textContent=''}else setStatus(c,c.ana?'분석 완료':'','ok')});
+  onSetting('ref');
+};
+function refreshNotes(){
+  const n=$('#stabNote'),anyAna=clips.some(c=>c.ana),noPose=anyAna&&clips.some(c=>c.ana&&c.ana.poseRatio<0.3);
+  if(S.stab==='person'){
+    if(!poseLM&&$('#poseState').classList.contains('err')){n.className='note warn';n.textContent='사람 인식 모델을 불러오지 못해서(인터넷 필요) 흔들림 보정으로 대신하고 있어요. 크기는 화면을 두 손가락으로 벌려 맞춰주세요.'}
+    else if(noPose){n.className='note warn';n.textContent='사람을 잘 못 찾은 영상은 흔들림 보정으로 대신해요. 크기는 손가락으로 맞춰주세요.'}
+    else{n.className='note';n.textContent='사람 고정: 아이를 항상 화면 가운데·같은 크기로 맞추고 카메라 흔들림도 없애요. 두 영상의 거리가 달라도 크기가 똑같이 맞춰져요.'}
+  }else if(S.stab==='shake'){n.className='note';n.textContent='흔들림만 보정: 배경을 기준으로 손떨림을 없애고 카메라가 따라간 움직임은 부드럽게 남겨요. 테두리가 안 보이게 살짝 확대돼요.'}
+  else{n.className='note';n.textContent='보정 없이 원본 그대로 보여줘요.'}
+  const sn=$('#syncNote'),R=refC(),O=othC();
+  if(S.sync==='dtw'){
+    if(R&&O&&R.ana&&O.ana&&!dtwMap){sn.className='note warn';sn.textContent='사람 인식이 안 돼서 동작별 맞춤은 못 하고, 시작·끝 구간으로 맞추고 있어요.'}
+    else{sn.className='note';sn.textContent='두 영상에서 같은 동작이 같은 순간에 나오도록 동작마다 속도를 자동으로 늦추고 당겨요. 기준 영상은 원래 속도 그대로예요.'}
+  }else{sn.className='note';sn.textContent='각 영상의 동작 시작~끝이 동시에 시작해서 동시에 끝나도록 다른 영상의 속도를 한 번에 맞춰요.'}
+}
+
+/* ---------------- MP4 작성 (H.264) ---------------- */
+class Mp4Mux{
+  constructor(w,h,fps){this.w=w;this.h=h;this.fps=fps;this.ts=fps*1000;this.dl=1000;this.s=[];this.data=[];this.desc=null}
+  add(ch,meta){
+    if(meta&&meta.decoderConfig&&meta.decoderConfig.description&&!this.desc){const d=meta.decoderConfig.description;
+      this.desc=ArrayBuffer.isView(d)?new Uint8Array(d.buffer,d.byteOffset,d.byteLength).slice():new Uint8Array(d).slice()}
+    const b=new Uint8Array(ch.byteLength);ch.copyTo(b);this.data.push(b);
+    this.s.push({size:b.length,key:ch.type==='key',pts:Math.round(ch.timestamp*this.ts/1e6)});
+  }
+  finish(){
+    if(!this.desc)throw new Error('인코더 설정 정보가 없어요');
+    const u32=v=>[v>>>24&255,v>>>16&255,v>>>8&255,v&255],u16=v=>[v>>8&255,v&255],str=s=>[...s].map(c=>c.charCodeAt(0));
+    const box=(t,...p)=>{const body=[].concat(...p.map(x=>x instanceof Uint8Array?Array.from(x):x));return[...u32(8+body.length),...str(t),...body]};
+    const fbox=(t,v,f,...p)=>box(t,[v,f>>16&255,f>>8&255,f&255],...p);
+    const n=this.s.length,dur=n*this.dl,mat=[...u32(0x10000),...u32(0),...u32(0),...u32(0),...u32(0x10000),...u32(0),...u32(0),...u32(0),...u32(0x40000000)];
+    const sorted=this.s.map(x=>x.pts).sort((a,b)=>a-b);
+    const offs=this.s.map((x,i)=>x.pts-sorted[i]);const needCtts=offs.some(o=>o!==0);
+    const rle=a=>{const r=[];for(const v of a){if(r.length&&r[r.length-1][1]===v)r[r.length-1][0]++;else r.push([1,v])}return r};
+    const deltas=sorted.map((p,i)=>i<n-1?sorted[i+1]-p:this.dl).map(d=>d>0?d:this.dl);
+    const sttsE=rle(deltas),cttsE=rle(offs);
+    const moov=off=>{
+      const stbl=box('stbl',
+        fbox('stsd',0,0,u32(1),box('avc1',[0,0,0,0,0,0],u16(1),u16(0),u16(0),u32(0),u32(0),u32(0),u16(this.w),u16(this.h),u32(0x480000),u32(0x480000),u32(0),u16(1),new Array(32).fill(0),u16(0x18),u16(0xffff),box('avcC',this.desc))),
+        fbox('stts',0,0,u32(sttsE.length),...sttsE.map(([c,d])=>[...u32(c),...u32(d)])),
+        needCtts?fbox('ctts',1,0,u32(cttsE.length),...cttsE.map(([c,o])=>[...u32(c),...u32(o>>>0)])):[],
+        fbox('stss',0,0,u32(this.s.filter(x=>x.key).length),...this.s.map((x,i)=>x.key?u32(i+1):[])),
+        fbox('stsc',0,0,u32(1),u32(1),u32(1),u32(1)),
+        fbox('stsz',0,0,u32(0),u32(n),...this.s.map(x=>u32(x.size))),
+        fbox('stco',0,0,u32(n),...(()=>{const r=[];let o=off;for(const x of this.s){r.push(u32(o));o+=x.size}return r})()));
+      return box('moov',
+        fbox('mvhd',0,0,u32(0),u32(0),u32(1000),u32(Math.round(dur/this.ts*1000)),u32(0x10000),u16(0x100),new Array(10).fill(0),mat,new Array(24).fill(0),u32(2)),
+        box('trak',
+          fbox('tkhd',0,3,u32(0),u32(0),u32(1),u32(0),u32(Math.round(dur/this.ts*1000)),u32(0),u32(0),u16(0),u16(0),u16(0),u16(0),mat,u32(this.w<<16),u32(this.h<<16)),
+          box('mdia',
+            fbox('mdhd',0,0,u32(0),u32(0),u32(this.ts),u32(dur),u16(0x55c4),u16(0)),
+            fbox('hdlr',0,0,u32(0),str('vide'),u32(0),u32(0),u32(0),str('VideoHandler'),[0]),
+            box('minf',fbox('vmhd',0,1,u16(0),u16(0),u16(0),u16(0)),box('dinf',fbox('dref',0,0,u32(1),fbox('url ',0,1))),stbl))));
+    };
+    const ftyp=box('ftyp',str('isom'),u32(512),str('isomiso2avc1mp41'));
+    const mdatSize=8+this.data.reduce((a,b)=>a+b.length,0);
+    const m0=moov(0),m1=moov(ftyp.length+m0.length+8);
+    return new Blob([new Uint8Array(ftyp),new Uint8Array(m1),new Uint8Array([...u32(mdatSize),...str('mdat')]),...this.data],{type:'video/mp4'});
+  }
+}
+
+/* ---------------- 내보내기 ---------------- */
+function outDims(){let ph=S.expH;for(;;){const d=dimsFor(ph);if((d.W*d.H<=4.2e6&&Math.max(d.W,d.H)<=3840)||ph<=480)return d;ph=Math.round(ph*0.85)}}
+async function pickEncoder(d){
+  if(!('VideoEncoder' in window))return null;
+  let ph=d.ph;
+  for(let tries=0;tries<4;tries++){
+    const dd=dimsFor(ph),br=Math.round(clamp(dd.W*dd.H*30*0.11,2e6,24e6));
+    for(const codec of['avc1.640033','avc1.640032','avc1.64002A','avc1.640028','avc1.4D0033','avc1.4D0028','avc1.42E033','avc1.42E028']){
+      const cfg={codec,width:dd.W,height:dd.H,bitrate:br,framerate:30,avc:{format:'avc'}};
+      try{const r=await VideoEncoder.isConfigSupported(cfg);if(r&&r.supported)return{cfg,d:dd}}catch(e){}
+    }
+    ph=Math.round(ph*0.75);
+  }
+  return null;
+}
+function seekFrame(c,t){
+  const f=c.fps||30,idx=Math.floor(t*f+1e-4);if(idx===c.lastIdx&&!c.v.seeking)return Promise.resolve();
+  c.lastIdx=idx;return seek(c.v,Math.min((idx+0.5)/f,c.dur-0.5/f));
+}
+const mModal=$('#modal');
+function prog(p,txt){$('#mBar').style.width=(p*100).toFixed(1)+'%';$('#mTxt').textContent=txt}
+async function exportWC(enc0){
+  const{cfg,d}=enc0,R=refC(),O=othC(),fps=30,sp=S.expSpeed,t0=R.trimS,t1=R.trimE,N=Math.max(1,Math.round((t1-t0)/sp*fps));
+  const cv=document.createElement('canvas');cv.width=d.W;cv.height=d.H;const ctx=cv.getContext('2d');
+  const mux=new Mp4Mux(d.W,d.H,fps);let err=null;
+  const enc=new VideoEncoder({output:(ch,m)=>mux.add(ch,m),error:e=>err=e});enc.configure(cfg);
+  clips.forEach(c=>c.lastIdx=-1);const st=performance.now();
+  for(let i=0;i<N;i++){
+    if(EXP.cancel||err)break;
+    const tr=t0+i/fps*sp,to=O?mapT(tr):0;
+    await Promise.all([seekFrame(R,tr),O?seekFrame(O,to):null]);
+    const times=[0,0];times[R.i]=tr;if(O)times[O.i]=to;
+    compose(ctx,d,times);
+    const fr=new VideoFrame(cv,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)});
+    enc.encode(fr,{keyFrame:i%60===0});fr.close();
+    while(enc.encodeQueueSize>3&&!err)await sleep(3);
+    if(i%3===0){const el=(performance.now()-st)/1000,eta=el/(i+1)*(N-i-1);prog((i+1)/N,`${i+1} / ${N} 프레임 · 남은 시간 약 ${Math.ceil(eta)}초`)}
+  }
+  if(err)throw err;
+  await enc.flush();enc.close();
+  if(EXP.cancel)return null;
+  prog(1,'파일 만드는 중…');
+  return{blob:mux.finish(),ext:'mp4',d};
+}
+// 빠른 방식: 기준 영상을 재생하면서 프레임마다 바로 담기 (다른 영상은 속도 제어로 따라감)
+async function exportPlay(enc0){
+  const{cfg,d}=enc0,R=refC(),O=othC(),fps=30,sp=S.expSpeed,t0=R.trimS,t1=R.trimE,N=Math.max(1,Math.round((t1-t0)/sp*fps));
+  const cv=document.createElement('canvas');cv.width=d.W;cv.height=d.H;const ctx=cv.getContext('2d');
+  const mux=new Mp4Mux(d.W,d.H,fps);let err=null;
+  const enc=new VideoEncoder({output:(ch,m)=>mux.add(ch,m),error:e=>err=e});enc.configure(cfg);
+  await seek(R.v,t0);if(O)await seek(O.v,mapT(t0));
+  let k=0;const st=performance.now();
+  const emit=times=>{compose(ctx,d,times);const fr=new VideoFrame(cv,{timestamp:Math.round(k*1e6/fps),duration:Math.round(1e6/fps)});enc.encode(fr,{keyFrame:k%60===0});fr.close();k++};
+  const tm=(tr)=>{const a=[0,0];a[R.i]=tr;if(O)a[O.i]=O.v.currentTime;return a};
+  emit(tm(t0));
+  let rate=1,lastPF=-1,drops=0,cbs=0,failed=false;
+  await new Promise(res=>{
+    let done=false,lastCb=performance.now();
+    const fin=()=>{if(done)return;done=true;clearInterval(wd);R.v.pause();if(O)O.v.pause();res()};
+    const cb=(now,meta)=>{
+      if(done)return;if(EXP.cancel||err){fin();return}
+      lastCb=performance.now();cbs++;const t=meta.mediaTime;
+      if(O)syncOther(R,O,t,rate);
+      const target=Math.min(N,Math.floor((t-t0)/sp*fps+0.5)+1),times=tm(t);
+      while(k<target)emit(times);
+      if(lastPF>=0&&meta.presentedFrames-lastPF>1)drops++;lastPF=meta.presentedFrames;
+      if(cbs%20===0){
+        if((drops>2||enc.encodeQueueSize>8)&&rate>0.3){rate=Math.max(0.3,rate*0.7);R.v.playbackRate=rate}
+        else if(drops===0&&enc.encodeQueueSize<3&&rate<1){rate=Math.min(1,rate*1.2);R.v.playbackRate=rate}
+        drops=0;
+        const el=(performance.now()-st)/1000,eta=el/Math.max(1,k)*(N-k);prog(k/N,`${k} / ${N} 프레임 · 남은 시간 약 ${Math.ceil(eta)}초`)}
+      if(t>=t1-0.5/fps||k>=N||R.v.ended)fin();else R.v.requestVideoFrameCallback(cb);
+    };
+    const wd=setInterval(()=>{if(done)return;if(R.v.ended)setTimeout(fin,150);
+      else if(performance.now()-lastCb>6000){if(cbs===0){failed=true;fin()}else{R.v.play().catch(()=>{});lastCb=performance.now()}}},500);
+    R.v.requestVideoFrameCallback(cb);R.v.muted=true;R.v.playbackRate=rate;R.v.play().catch(()=>fin());
+    if(O){O.v.muted=true;O.v.playbackRate=clamp(rate*slopeAt(t0),0.0625,8);O.v.play().catch(()=>{})}
+  });
+  if(err)throw err;
+  if(EXP.cancel||failed){try{enc.close()}catch(e){}return failed?'fallback':null}
+  while(k<N)emit(tm(R.v.currentTime));
+  prog(1,'파일 만드는 중…');
+  await enc.flush();enc.close();
+  return{blob:mux.finish(),ext:'mp4',d};
+}
+async function exportRec(){
+  const d=outDims(),R=refC(),O=othC(),sp=S.expSpeed;
+  const cv=document.createElement('canvas');cv.width=d.W;cv.height=d.H;const ctx=cv.getContext('2d');
+  const mime=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m));
+  if(!mime)throw new Error('이 브라우저는 영상 내보내기를 지원하지 않아요. 크롬에서 열어주세요.');
+  await seek(R.v,R.trimS);if(O)await seek(O.v,mapT(R.trimS));compose(ctx,d,null);
+  const rec=new MediaRecorder(cv.captureStream(30),{mimeType:mime,videoBitsPerSecond:Math.round(clamp(d.W*d.H*30*0.12,2e6,16e6))});
+  const chunks=[];rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};rec.start(300);
+  R.v.muted=true;R.v.playbackRate=sp;R.v.play().catch(()=>{});if(O){O.v.playbackRate=clamp(sp*slopeAt(R.trimS),0.0625,8);O.v.play().catch(()=>{})}
+  await new Promise(res=>{const loop=()=>{if(EXP.cancel){res();return}const t=R.v.currentTime;
+    if(t>=R.trimE-0.02||R.v.ended){res();return}if(O)syncOther(R,O,t,sp);compose(ctx,d,null);
+    prog((t-R.trimS)/(R.trimE-R.trimS),'실시간으로 녹화 중… (이 브라우저는 빠른 내보내기를 지원하지 않아요)');requestAnimationFrame(loop)};loop()});
+  R.v.pause();if(O)O.v.pause();
+  await new Promise(r=>{rec.onstop=r;rec.stop()});
+  if(EXP.cancel)return null;
+  return{blob:new Blob(chunks,{type:mime.split(';')[0]}),ext:mime.includes('mp4')?'mp4':'webm',d};
+}
+let lastURL=null;
+$('#expBtn').onclick=async()=>{
+  const R=refC();if(!R){alert('먼저 영상을 올려주세요');return}
+  if(busy()){alert('분석이 끝난 뒤에 내보낼 수 있어요');return}
+  pause();EXP.on=true;EXP.cancel=false;
+  $('#mTitle').textContent='영상 만드는 중…';$('#mRun').style.display='';$('#mDone').style.display='none';mModal.classList.add('on');prog(0,'준비 중');
+  try{
+    const enc=await pickEncoder(outDims());let r;
+    const canPlayCap='requestVideoFrameCallback' in HTMLVideoElement.prototype;
+    if(enc&&canPlayCap&&!S.expExact){EXP.mode='play';r=await exportPlay(enc);if(r==='fallback'){EXP.mode='wc';r=await exportWC(enc)}}
+    else if(enc){EXP.mode='wc';r=await exportWC(enc)}else{EXP.mode='rec';r=await exportRec()}
+    if(!r){mModal.classList.remove('on');return}
+    if(lastURL)URL.revokeObjectURL(lastURL);lastURL=URL.createObjectURL(r.blob);
+    const now=new Date(),name=`motion_compare_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}.${r.ext}`;
+    $('#mTitle').textContent='완성됐어요!';$('#mRun').style.display='none';$('#mDone').style.display='';
+    $('#mVideo').src=lastURL;$('#mSave').href=lastURL;$('#mSave').download=name;
+    $('#mSize').textContent=`${name} · ${(r.blob.size/1048576).toFixed(1)}MB · ${r.d.W}×${r.d.H}`;
+    const file=new File([r.blob],name,{type:r.blob.type});
+    $('#mShare').style.display=navigator.canShare&&navigator.canShare({files:[file]})?'':'none';
+    $('#mShare').onclick=()=>navigator.share({files:[file],title:'동작 비교'}).catch(()=>{});
+    $('#expInfo').textContent=`마지막 내보내기: ${name}`;
+  }catch(e){console.error(e);$('#mTitle').textContent='내보내기에 실패했어요';$('#mTxt').textContent=String(e.message||e);$('#mCancel').textContent='닫기'}
+  finally{EXP.on=false;EXP.mode='';P.dirty=true;const R2=refC();if(R2)await seek(R2.v,R2.trimS);const O=othC();if(O&&R2)await seek(O.v,mapT(R2.trimS));updateScrub()}
+};
+$('#mCancel').onclick=()=>{if(EXP.on)EXP.cancel=true;else mModal.classList.remove('on');$('#mCancel').textContent='취소'};
+$('#mClose').onclick=()=>{mModal.classList.remove('on');$('#mVideo').pause()};
+
+/* ---------------- 시작 ---------------- */
+syncControls();refreshNotes();resizeView();updateSyncInfo();requestAnimationFrame(tick);
+window.__mc={clips,S,P,EXP,mapT,computeDTW,get dtwMap(){return dtwMap}}; // 점검용
+</script>
+</body>
+</html>
