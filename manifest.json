@@ -1,7 +1,7 @@
 {
-  "name": "동작 비교 분석기",
-  "short_name": "동작비교",
-  "description": "두 영상을 나란히 놓고 흔들림 보정·크기·속도를 맞춰 비교하고 날짜 스탬프와 함께 영상으로 내보내는 앱",
+  "name": "아이 영상 분석기",
+  "short_name": "영상분석",
+  "description": "아이 얼굴로 사진·영상을 찾아 날짜별로 보고, 동작을 나란히 비교해 영상으로 내보내는 앱 (기기 안에서만 분석)",
   "lang": "ko",
   "id": "./",
   "start_url": "./",
@@ -11,8 +11,23 @@
   "background_color": "#0d0f13",
   "theme_color": "#0d0f13",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

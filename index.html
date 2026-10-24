@@ -3,15 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>동작 비교 분석기</title>
+<title>아이 영상 분석기</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d0f13">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="동작비교">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="영상분석">
 <style>
 :root{
   --bg:#0d0f13;--panel:#161920;--panel2:#1e222b;--line:#2a2f3a;--text:#eceff4;--muted:#8d95a5;
@@ -116,17 +115,122 @@ input[type=range]{accent-color:var(--a);height:26px}
 .modal .row .btn{flex:1}
 .steps{display:flex;gap:6px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:0 0 12px}
 .steps span{background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+
+[hidden]{display:none!important}
+.eng{font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:4px 10px;border-radius:99px;white-space:nowrap}
+.eng.ok{color:var(--ok)}.eng.err{color:var(--warn)}
+header .stat{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+header .stat .pose{margin-left:0}
+.ptabs{display:flex;gap:6px;margin:0 0 14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:5px;position:sticky;top:6px;z-index:30}
+.ptabs button{flex:1;background:none;border:0;border-radius:10px;padding:11px 6px;font-size:15px;font-weight:700;color:var(--muted)}
+.ptabs button.on{background:var(--a);color:#111}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.card h2 .n{width:24px;height:24px;border-radius:7px;background:var(--a);color:#111;display:grid;place-items:center;font-size:13px;font-weight:800}
+.sub{font-size:13px;color:var(--muted);margin:0 0 10px}
+label.btn{display:inline-block;cursor:pointer}label.btn input{display:none}
+.faces{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin:10px 0}
+.face{position:relative;border-radius:10px;overflow:hidden;border:2px solid transparent;background:#000;aspect-ratio:1;cursor:pointer;opacity:.55}
+.face img{width:100%;height:100%;object-fit:cover;display:block}
+.face.on{border-color:var(--a);opacity:1}
+.face.on::after{content:'✓';position:absolute;top:3px;right:5px;background:var(--a);color:#111;border-radius:50%;width:18px;height:18px;font-size:12px;font-weight:800;display:grid;place-items:center}
+.refs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.refs img{width:44px;height:44px;border-radius:8px;object-fit:cover}
+.prog{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;margin:10px 0 6px}
+.prog i{display:block;height:100%;width:0;background:var(--a);transition:width .2s}
+.tsl{display:flex;align-items:center;gap:8px;margin:8px 0}.tsl input{flex:1;accent-color:var(--a)}
+.res-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.day{margin-top:16px}
+.day h3{font-size:14px;margin:0 0 8px;display:flex;gap:8px;align-items:baseline;position:sticky;top:64px;background:var(--panel);padding:6px 0;z-index:2}
+.day h3 span{color:var(--muted);font-weight:400;font-size:12px}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+@media (max-width:480px){.rgrid{grid-template-columns:repeat(3,1fr);gap:5px}}
+.it{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:1;cursor:pointer}
+.it img{width:100%;height:100%;object-fit:cover;display:block}
+.it .bx{position:absolute;border:2px solid var(--a);border-radius:4px;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+.it .tg{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.7);color:#fff;font-size:11px;padding:2px 6px;border-radius:6px}
+.it .sc{position:absolute;right:4px;top:4px;background:rgba(0,0,0,.7);color:var(--a);font-size:11px;padding:2px 6px;border-radius:6px;font-weight:700}
+.it .ck{position:absolute;left:4px;top:4px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.4);display:none}
+.selmode .it .ck{display:block}
+.it.sel .ck{background:var(--a);border-color:var(--a)}
+.it.sel .ck::after{content:'✓';color:#111;font-weight:800;font-size:13px;display:grid;place-items:center;height:100%}
+.empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:14px}
+#viewer .box{width:min(720px,100%)}
+.vw{position:relative;background:#000;border-radius:10px;overflow:hidden;display:flex;justify-content:center}
+.vw img,.vw video{max-width:100%;max-height:60vh;display:block}
+.times{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.times button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:13px}
+.selbar{position:sticky;bottom:0;background:rgba(13,15,19,.95);border-top:1px solid var(--line);padding:10px 14px;display:none;gap:8px;align-items:center;justify-content:space-between;z-index:20}
+.selmode .selbar{display:flex}
+input.name{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;min-width:0;flex:1;max-width:220px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div class="logo">▶</div>
-    <h1>동작 비교 분석기</h1>
-    <span class="pose" id="poseState">사람 인식 준비 중…</span>
+    <h1>아이 영상 분석기</h1>
+    <div class="stat"><span class="eng" id="eng">얼굴 인식 준비 중…</span><span class="pose" id="poseState">사람 인식 대기</span></div>
     <button class="btn pri" id="installBtn" style="display:none">📲 앱 설치</button>
   </header>
   <div class="note" id="installTip" style="display:none"></div>
+  <nav class="ptabs" id="ptabs"><button data-p="find" class="on">🔍 아이 찾기</button><button data-p="cmp">▶ 동작 비교</button></nav>
+  <div id="pageFind">
+  <div class="card">
+    <h2><span class="n">1</span>찾을 아이</h2>
+    <p class="sub">아이 얼굴이 잘 보이는 영상이나 사진을 올리고, 그 아이 얼굴만 골라주세요. 여러 장일수록 더 잘 찾아요.</p>
+    <div class="row">
+      <input class="name" id="refName" placeholder="아이 이름 (선택)">
+      <label class="btn pri">영상·사진 올리기<input type="file" id="refFile" accept="image/*,video/*" multiple></label>
+      <button class="btn" id="refReset">새 아이로 바꾸기</button>
+    </div>
+    <div class="small" id="refStatus" style="margin-top:8px"></div>
+    <div class="faces" id="refCand"></div>
+    <div class="row" id="refCandBtns" style="display:none">
+      <button class="btn pri" id="refAdd">고른 얼굴로 찾기</button><span class="small">눌러서 고르기 / 빼기</span>
+    </div>
+    <div class="small" id="refSum"></div>
+    <div class="refs" id="refList"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">2</span>찾을 사진·영상 고르기</h2>
+    <p class="sub">폰 갤러리나 구글 드라이브에서 여러 개를 한꺼번에 고르세요. PC는 폴더째 고를 수 있어요.</p>
+    <div class="note">📱 드라이브에서 고르는 법: [사진·영상 고르기] → 왼쪽 위 ☰ 메뉴 → <b>Drive</b> → 폴더로 들어가서 <b>첫 파일을 길게 눌러</b> 선택 → 나머지 톡톡 눌러 여러 개 선택 → [선택]</div>
+    <div class="row">
+      <label class="btn pri">사진·영상 고르기<input type="file" id="libFiles" accept="image/*,video/*" multiple></label>
+      <label class="btn" id="dirBtn">폴더 고르기 (PC)<input type="file" id="libDir" webkitdirectory multiple></label>
+    </div>
+    <div class="row" style="margin-top:10px"><span class="small">영상 살펴보는 간격</span>
+      <div class="chips" id="ivChips"><button data-v="3">빠르게 3초</button><button data-v="1.5">보통 1.5초</button><button data-v="0.7">꼼꼼 0.7초</button></div>
+    </div>
+    <div id="scanBox" style="display:none">
+      <div class="prog"><i id="scanBar"></i></div>
+      <div class="small" id="scanTxt"></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="scanPause">일시정지</button><button class="btn" id="scanStop">그만하기</button></div>
+    </div>
+    <div class="note">🔒 사진·영상은 이 기기 안에서만 분석되고 어디에도 올라가지 않아요. 한 번 분석한 파일은 기기에 기억해 두어서, 다른 아이를 찾을 때는 다시 분석하지 않고 바로 찾아요.</div>
+    <div class="row"><span class="small" id="cacheInfo"></span><button class="btn" id="cacheClear" style="font-size:12px;padding:4px 9px">분석 기록 지우기</button></div>
+  </div>
+
+  <div class="card" id="resCard">
+    <div class="res-top">
+      <h2 style="margin:0"><span class="n">3</span><span id="resTitle">찾은 사진·영상</span></h2>
+      <div class="row"><button class="btn pri" id="zipBtn">📦 ZIP 저장</button><button class="btn" id="selBtn">골라서 보내기</button></div>
+    </div>
+    <div class="tsl"><span class="small">엄격</span><input type="range" id="thr" min="0.36" max="0.6" step="0.01"><span class="small">느슨</span></div>
+    <div class="row">
+      <div class="chips" id="typeChips"><button data-v="all" class="on">전체</button><button data-v="image">사진</button><button data-v="video">영상</button></div>
+      <div class="chips" id="sortChips"><button data-v="new" class="on">최신순</button><button data-v="old">오래된순</button></div>
+    </div>
+    <div class="small" style="margin-top:6px">📦 ZIP 저장: 지금 보이는 결과(골라서 보내기 중이면 고른 것만)를 원본 화질·프레임 그대로 묶어요.</div>
+    <div class="small" id="resHint" style="margin-top:4px">잘못 찾은 게 보이면 눌러서 [아니에요]를 눌러주세요. 그 아이를 점점 더 정확하게 찾아요.</div>
+    <div id="results"><div class="empty">찾을 아이를 정하고 사진·영상을 골라주세요</div></div>
+  </div>
+  <div class="selbar" id="selBar"><span id="selCnt">0개 선택</span><div class="row"><button class="btn" id="selAll">모두</button><button class="btn pri" id="selShare">공유·저장</button><button class="btn" id="selCancel">취소</button></div></div>
+
+  </div>
+  <div id="pageCmp" hidden>
   <div class="steps"><span>① 영상 A·B 올리기</span><span>② 자동 분석 (흔들림·사람·동작 구간)</span><span>③ 재생해서 비교</span><span>④ 영상으로 내보내기</span></div>
 
   <div class="grid">
@@ -177,6 +281,8 @@ input[type=range]{accent-color:var(--a);height:26px}
             <button data-v="off">끄기</button>
           </div>
         </div>
+        <label class="tog">🎯 찾은 아이만 따라가기 <input type="checkbox" data-key="follow"></label>
+        <div class="small" id="followNote" style="margin:-6px 0 12px"></div>
         <div class="note" id="stabNote">사람 고정: 아이를 항상 화면 가운데·같은 크기로 맞추고 카메라 흔들림을 없애요. 두 영상의 키·거리가 달라도 크기가 똑같이 맞춰져요.</div>
         <div class="fld" data-show="stab!=off"><label>보정 강도</label>
           <div class="sl"><input type="range" min="1" max="5" step="1" data-key="strength"><output data-out="strength"></output></div>
@@ -268,6 +374,8 @@ input[type=range]{accent-color:var(--a);height:26px}
       </div>
     </div>
   </div>
+
+  </div>
 </div>
 
 <div class="modal" id="modal"><div class="box">
@@ -288,6 +396,397 @@ input[type=range]{accent-color:var(--a);height:26px}
   </div>
 </div></div>
 
+<div class="modal" id="viewer"><div class="box">
+  <div class="vw" id="vwBox"></div>
+  <div class="times" id="vwTimes"></div>
+  <div class="small" id="vwInfo" style="margin:6px 0 10px"></div>
+  <div class="row">
+    <button class="btn pri" id="vwYes">맞아요 (이 아이)</button>
+    <button class="btn" id="vwNo">아니에요</button>
+    <button class="btn" id="vwShare">공유</button>
+    <span id="vwCmp" class="row"><button class="btn" id="vwCmpA">▶ 동작 비교 A로</button><button class="btn" id="vwCmpB">B로</button></span>
+    <button class="btn" id="vwClose" style="margin-left:auto">닫기</button>
+  </div>
+</div></div>
+
+<video id="scanVideo" muted playsinline preload="auto" style="position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none"></video>
+
+<div class="modal" id="zipModal"><div class="box">
+  <h3 id="zTitle">ZIP 만드는 중…</h3>
+  <div class="pbar"><i id="zBar"></i></div>
+  <div class="small" id="zTxt"></div>
+  <div class="row" style="margin-top:12px"><a class="btn pri" id="zSave" style="display:none;text-decoration:none;text-align:center">기기에 저장</a><button class="btn" id="zClose">취소</button></div>
+</div></div>
+
+<script type="module">
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),sleep=ms=>new Promise(r=>setTimeout(r,ms)),pad=n=>String(n).padStart(2,'0');
+const fmtT=t=>{const m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+pad(s)};
+
+/* ============ 설정 ============ */
+const S={thr:0.47,iv:1.5,type:'all',sort:'new'};
+try{Object.assign(S,JSON.parse(localStorage.getItem('face-finder-settings')||'{}'))}catch(e){}
+const saveS=()=>{try{localStorage.setItem('face-finder-settings',JSON.stringify(S))}catch(e){}};
+
+/* ============ 얼굴 인식 엔진 (face-api, 기기 안에서 실행) ============ */
+let FA=null;
+const VER='1.7.12';
+const engineReady=(async()=>{
+  const el=$('#eng');
+  if(window.__faceHook){el.textContent='얼굴 인식 준비됨 (테스트)';el.className='eng ok';return true}
+  try{
+    for(const u of[`https://cdn.jsdelivr.net/npm/@vladmandic/face-api@${VER}/dist/face-api.esm.js`,`https://cdn.jsdelivr.net/npm/@vladmandic/face-api@${VER}/+esm`]){
+      try{FA=await import(u);break}catch(e){console.warn('face-api import',u,e)}}
+    if(!FA)throw new Error('import');
+    try{await FA.tf.setBackend('webgl')}catch(e){}
+    await FA.tf.ready();
+    const M=`https://cdn.jsdelivr.net/npm/@vladmandic/face-api@${VER}/model`;
+    await FA.nets.ssdMobilenetv1.loadFromUri(M);await FA.nets.faceLandmark68Net.loadFromUri(M);await FA.nets.faceRecognitionNet.loadFromUri(M);
+    el.textContent='얼굴 인식 준비됨';el.className='eng ok';return true;
+  }catch(e){console.warn(e);el.textContent='얼굴 인식을 못 불러왔어요 (처음엔 인터넷 필요)';el.className='eng err';return false}
+})();
+// canvas → [{box:[x,y,w,h](0~1), desc:Float32Array(128), score}]
+async function detectFaces(cv){
+  if(window.__faceHook)return window.__faceHook.detect(cv);
+  if(!FA)return[];
+  const r=await FA.detectAllFaces(cv,new FA.SsdMobilenetv1Options({minConfidence:0.45,maxResults:40})).withFaceLandmarks().withFaceDescriptors();
+  const W=cv.width,H=cv.height;
+  return r.filter(x=>x.detection.box.width>=22).map(x=>{const b=x.detection.box;return{box:[b.x/W,b.y/H,b.width/W,b.height/H],desc:new Float32Array(x.descriptor),score:x.detection.score}});
+}
+const dist=(a,b)=>{let s=0;for(let i=0;i<a.length;i++){const d=a[i]-b[i];s+=d*d}return Math.sqrt(s)};
+
+/* ============ 저장소 (IndexedDB) ============ */
+const DB=await new Promise(res=>{try{const r=indexedDB.open('face-finder',1);
+  r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('items',{keyPath:'key'});d.createObjectStore('kv')};
+  r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}});
+const tx=(st,mode,fn)=>new Promise(res=>{if(!DB)return res(null);try{const t=DB.transaction(st,mode),s=t.objectStore(st);const q=fn(s);t.oncomplete=()=>res(q&&q.result);t.onerror=()=>res(null)}catch(e){res(null)}});
+const dbPut=it=>tx('items','readwrite',s=>s.put(it));
+const dbAll=()=>tx('items','readonly',s=>s.getAll());
+const kvSet=(k,v)=>tx('kv','readwrite',s=>s.put(v,k));
+const kvGet=k=>tx('kv','readonly',s=>s.get(k));
+
+/* ============ 상태 ============ */
+const items=new Map(); // key → {key,name,type,date,dateSrc,dur,frames:[{t,thumb:Blob,w,h,faces:[{box,desc}]}],err,iv}
+const files=new Map(); // key → File (이번에 고른 원본)
+const thumbURL=new Map();
+let REF={name:'',pos:[],neg:[]}; // pos/neg: [{desc,thumb(dataURL)}]
+const fileKey=f=>`${f.name}|${f.size}|${f.lastModified}`;
+const isVideo=f=>/^video\//.test(f.type)||/\.(mp4|mov|m4v|webm|3gp|mkv)$/i.test(f.name);
+const isImage=f=>/^image\//.test(f.type)||/\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(f.name);
+
+/* ============ 날짜 찾기 ============ */
+function nameDate(n){
+  const m=n.match(/(20\d{2})[-_.]?([01]\d)[-_.]?([0-3]\d)(?:[ _\-T.]?([0-2]\d)[-_.:]?([0-5]\d)(?:[-_.:]?([0-5]\d))?)?/);if(!m)return null;
+  const y=+m[1],mo=+m[2],d=+m[3];if(mo<1||mo>12||d<1||d>31)return null;let h=+(m[4]||0),mi=+(m[5]||0),s=+(m[6]||0);if(h>23){h=mi=s=0}
+  const dt=new Date(y,mo-1,d,h,mi,s);return isNaN(dt)?null:dt}
+async function exifDate(f){
+  const b=new DataView(await f.slice(0,Math.min(f.size,256*1024)).arrayBuffer());
+  if(b.byteLength<4||b.getUint16(0)!==0xFFD8)return null;let p=2;
+  while(p+4<b.byteLength){const mk=b.getUint16(p);if((mk&0xFF00)!==0xFF00)return null;const len=b.getUint16(p+2);
+    if(mk===0xFFE1&&b.getUint32(p+4)===0x45786966){const t=p+10,le=b.getUint16(t)===0x4949;const u16=o=>b.getUint16(t+o,le),u32=o=>b.getUint32(t+o,le);
+      const readIFD=(off,want)=>{const n=u16(off);for(let i=0;i<n;i++){const e=off+2+i*12;if(t+e+12>b.byteLength)return null;const tag=u16(e);if(want.includes(tag))return{tag,cnt:u32(e+4),val:u32(e+8)}}return null};
+      const str=(o,n)=>{let s='';for(let i=0;i<n-1&&t+o+i<b.byteLength;i++)s+=String.fromCharCode(b.getUint8(t+o+i));return s};
+      const ifd0=u32(4);const ex=readIFD(ifd0,[0x8769]);let ds=null;
+      if(ex){const d=readIFD(ex.val,[0x9003,0x9004]);if(d)ds=str(d.val,d.cnt)}
+      if(!ds){const d=readIFD(ifd0,[0x0132]);if(d)ds=str(d.val,d.cnt)}
+      const m=ds&&ds.match(/(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+      return m?new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6]):null}
+    p+=2+len}
+  return null}
+async function mp4Date(f){
+  const rd=async(o,n)=>new DataView(await f.slice(o,o+n).arrayBuffer()),ty=(v,p)=>String.fromCharCode(v.getUint8(p+4),v.getUint8(p+5),v.getUint8(p+6),v.getUint8(p+7));
+  let off=0;for(let k=0;k<200&&off+8<=f.size;k++){const h=await rd(off,16);let bs=h.getUint32(0),hd=8;const t=ty(h,0);
+    if(bs===1){bs=Number(h.getBigUint64(8));hd=16}else if(bs===0)bs=f.size-off;if(bs<8)break;
+    if(t==='moov'){const mv=await rd(off+hd,Math.min(bs-hd,1<<20));let p=0;while(p+16<=mv.byteLength){const cs=mv.getUint32(p);
+      if(ty(mv,p)==='mvhd'){const v=mv.getUint8(p+8),s=v===1?Number(mv.getBigUint64(p+12)):mv.getUint32(p+12);return s>2082844800+946684800?new Date((s-2082844800)*1000):null}
+      if(cs<8)break;p+=cs}return null}off+=bs}return null}
+async function fileDate(f){
+  try{if(isImage(f)){const e=await exifDate(f);if(e)return{d:e,src:'사진 정보'}}}catch(e){}
+  const n=nameDate(f.name);if(n)return{d:n,src:'파일 이름'};
+  try{if(isVideo(f)){const m=await mp4Date(f);if(m)return{d:m,src:'영상 정보'}}}catch(e){}
+  return{d:new Date(f.lastModified||Date.now()),src:'파일 시각'};
+}
+
+/* ============ 그림 그리기 도우미 ============ */
+function toCanvas(src,sw,sh,maxSide){const k=Math.min(1,maxSide/Math.max(sw,sh)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(sw*k));c.height=Math.max(1,Math.round(sh*k));c.getContext('2d').drawImage(src,0,0,c.width,c.height);return c}
+const toBlob=(c,q=0.72)=>new Promise(r=>c.toBlob(r,'image/jpeg',q));
+function cropFace(cv,box,size=112){const[x,y,w,h]=box,W=cv.width,H=cv.height,s=Math.max(w*W,h*H)*1.5,cx=(x+w/2)*W,cy=(y+h/2)*H;
+  const c=document.createElement('canvas');c.width=c.height=size;c.getContext('2d').drawImage(cv,cx-s/2,cy-s/2,s,s,0,0,size,size);return c}
+async function loadImage(f){
+  try{return await createImageBitmap(f,{imageOrientation:'from-image'})}catch(e){}
+  return await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>rej(new Error('img'));im.src=URL.createObjectURL(f)});
+}
+const vEl=$('#scanVideo');
+function seek(v,t){return new Promise(res=>{let ok=false;const d=()=>{if(ok)return;ok=true;v.removeEventListener('seeked',d);res()};v.addEventListener('seeked',d);v.currentTime=t;setTimeout(d,5000)})}
+async function openVideo(f){
+  const url=URL.createObjectURL(f);
+  try{await new Promise((res,rej)=>{vEl.onloadeddata=res;vEl.onerror=()=>rej(new Error('video'));setTimeout(()=>rej(new Error('timeout')),20000);vEl.src=url;vEl.load()});
+    if(!vEl.videoWidth)throw new Error('video');return url}catch(e){URL.revokeObjectURL(url);throw e}
+}
+
+/* ============ 1. 기준 얼굴 ============ */
+let cand=[]; // {desc,thumb,on}
+$('#refFile').onchange=async e=>{
+  const fs=[...e.target.files];e.target.value='';if(!fs.length)return;
+  const ok=await engineReady;if(!ok){$('#refStatus').textContent='얼굴 인식을 불러오지 못했어요. 인터넷 연결 후 다시 열어주세요.';return}
+  cand=[];$('#refCand').innerHTML='';$('#refCandBtns').style.display='none';
+  for(const f of fs){
+    $('#refStatus').textContent=`${f.name} 에서 얼굴 찾는 중…`;
+    try{
+      if(isVideo(f)){const url=await openVideo(f);const dur=vEl.duration,n=Math.min(24,Math.max(6,Math.floor(dur/0.6)));
+        for(let i=0;i<n;i++){const t=(i+0.5)*dur/n;await seek(vEl,t);const cv=toCanvas(vEl,vEl.videoWidth,vEl.videoHeight,960);
+          const fc=await detectFaces(cv);fc.sort((a,b)=>b.box[2]-a.box[2]);
+          fc.forEach((x,j)=>cand.push({desc:x.desc,thumb:cropFace(cv,x.box).toDataURL('image/jpeg',0.8),big:j===0,frame:i}));
+          $('#refStatus').textContent=`${f.name} 에서 얼굴 찾는 중… ${Math.round((i+1)/n*100)}%`}
+        URL.revokeObjectURL(url)}
+      else{const im=await loadImage(f);const cv=toCanvas(im,im.width,im.height,1280);im.close&&im.close();
+        const fc=await detectFaces(cv);fc.sort((a,b)=>b.box[2]-a.box[2]);
+        fc.forEach((x,j)=>cand.push({desc:x.desc,thumb:cropFace(cv,x.box).toDataURL('image/jpeg',0.8),big:j===0}))}
+    }catch(err){console.warn(err);$('#refStatus').textContent=`${f.name}: 열 수 없는 파일이에요`}
+  }
+  if(!cand.length){$('#refStatus').textContent='얼굴을 못 찾았어요. 얼굴이 크게 나온 사진·영상으로 다시 해주세요.';return}
+  // 자동으로 같은 아이 고르기: 각 장면의 가장 큰 얼굴 중 서로 가장 닮은 얼굴(중심)과 가까운 얼굴들
+  const base=REF.pos.length?REF.pos:null;let center;
+  if(base){center=null}else{const bigs=cand.filter(c=>c.big);let best=Infinity;for(const a of bigs){let s=0;for(const b of bigs)s+=dist(a.desc,b.desc);if(s<best){best=s;center=a}}}
+  cand.forEach(c=>{const d=base?Math.min(...base.map(p=>dist(p.desc,c.desc))):dist(center.desc,c.desc);c.on=d<0.5});
+  renderCand();$('#refStatus').textContent=`얼굴 ${cand.length}개를 찾았어요. 찾을 아이 얼굴만 골라주세요 (주황 테두리 = 고름)`;
+};
+function renderCand(){
+  const box=$('#refCand');box.innerHTML='';
+  cand.forEach(c=>{const d=document.createElement('div');d.className='face'+(c.on?' on':'');d.innerHTML=`<img src="${c.thumb}">`;d.onclick=()=>{c.on=!c.on;d.classList.toggle('on',c.on)};box.appendChild(d)});
+  $('#refCandBtns').style.display=cand.length?'flex':'none';
+}
+$('#refAdd').onclick=async()=>{
+  const sel=cand.filter(c=>c.on);if(!sel.length){alert('찾을 아이 얼굴을 하나 이상 골라주세요');return}
+  // 비슷한 얼굴은 너무 많이 넣지 않기
+  for(const c of sel){if(REF.pos.length<40&&!REF.pos.some(p=>dist(p.desc,c.desc)<0.12))REF.pos.push({desc:c.desc,thumb:c.thumb})}
+  cand=[];$('#refCand').innerHTML='';$('#refCandBtns').style.display='none';$('#refStatus').textContent='';
+  REF.name=$('#refName').value.trim();await saveRef();renderRef();renderResults();
+};
+$('#refName').oninput=()=>{REF.name=$('#refName').value.trim();saveRef();updateTitle()};
+$('#refReset').onclick=async()=>{if(REF.pos.length&&!confirm('지금 아이 정보를 지우고 새 아이를 찾을까요? (분석한 사진·영상 기록은 그대로 남아요)'))return;
+  REF={name:'',pos:[],neg:[]};$('#refName').value='';cand=[];renderCand();await saveRef();renderRef();renderResults()};
+const saveRef=()=>{dispatchEvent(new Event('ref-changed'));return kvSet('ref',{name:REF.name,pos:REF.pos.map(p=>({desc:Array.from(p.desc),thumb:p.thumb})),neg:REF.neg.map(p=>({desc:Array.from(p.desc)}))})};
+function renderRef(){
+  $('#refList').innerHTML=REF.pos.map(p=>`<img src="${p.thumb}">`).join('');
+  $('#refSum').textContent=REF.pos.length?`기준 얼굴 ${REF.pos.length}개${REF.neg.length?` · 제외한 얼굴 ${REF.neg.length}개`:''} — 사진·영상을 더 올리면 기준이 늘어나요`:'';
+  updateTitle();
+}
+const updateTitle=()=>$('#resTitle').textContent=REF.name?`${REF.name} 찾은 사진·영상`:'찾은 사진·영상';
+
+/* ============ 2. 사진·영상 분석 ============ */
+const SCAN={queue:[],running:false,paused:false,stop:false,done:0,total:0};
+$('#libFiles').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+$('#libDir').onchange=e=>{addFiles([...e.target.files]);e.target.value=''};
+if(/android|iphone|ipad|mobile|tablet/i.test(navigator.userAgent)||matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0)$('#dirBtn').style.display='none';
+function addFiles(fs){
+  fs=fs.filter(f=>isImage(f)||isVideo(f));if(!fs.length)return;
+  for(const f of fs){const k=fileKey(f);files.set(k,f);const it=items.get(k);
+    if(it&&(it.type==='image'||it.iv<=S.iv+1e-6)&&!it.err)continue;
+    if(!SCAN.queue.some(x=>fileKey(x)===k)){SCAN.queue.push(f);SCAN.total++}}
+  renderResults();runScan();
+}
+async function runScan(){
+  if(SCAN.running)return;SCAN.running=true;SCAN.stop=false;$('#scanBox').style.display='';
+  const ok=await engineReady;
+  if(!ok){$('#scanTxt').textContent='얼굴 인식을 불러오지 못해서 분석할 수 없어요. 인터넷 연결 후 다시 열어주세요.';SCAN.running=false;return}
+  const t0=performance.now();let lastRender=0;
+  while(SCAN.queue.length&&!SCAN.stop){
+    while(SCAN.paused&&!SCAN.stop)await sleep(200);if(SCAN.stop)break;
+    const f=SCAN.queue.shift();
+    const pr=SCAN.done/Math.max(1,SCAN.total);$('#scanBar').style.width=(pr*100).toFixed(1)+'%';
+    const el=(performance.now()-t0)/1000,eta=SCAN.done>0?el/SCAN.done*(SCAN.total-SCAN.done):0;
+    const msg=sub=>$('#scanTxt').textContent=`${SCAN.done+1} / ${SCAN.total} · ${f.name}${sub?' · '+sub:''}${eta?` · 남은 시간 약 ${eta>90?Math.ceil(eta/60)+'분':Math.ceil(eta)+'초'}`:''}`;
+    msg('');
+    try{const it=await analyzeFile(f,msg);items.set(it.key,it);await dbPut(it)}
+    catch(e){console.warn(e);const dd=await fileDate(f);const it={key:fileKey(f),name:f.name,type:isVideo(f)?'video':'image',date:dd.d.getTime(),dateSrc:dd.src,frames:[],err:String(e.message||e),iv:S.iv};items.set(it.key,it)}
+    SCAN.done++;
+    if(performance.now()-lastRender>1500||!SCAN.queue.length){renderResults();lastRender=performance.now()}
+  }
+  $('#scanBar').style.width=SCAN.stop?$('#scanBar').style.width:'100%';
+  const errs=[...items.values()].filter(i=>i.err&&files.has(i.key)).length;
+  $('#scanTxt').textContent=SCAN.stop?`멈췄어요 (${SCAN.done}/${SCAN.total})`:`분석 끝! ${SCAN.total}개${errs?` · 열 수 없는 파일 ${errs}개 (아이폰 HEIC 사진이나 이 기기에서 재생 안 되는 영상)`:''}`;
+  SCAN.running=false;SCAN.paused=false;$('#scanPause').textContent='일시정지';
+  if(!SCAN.queue.length){SCAN.total=0;SCAN.done=0}
+  renderResults();updateCache();
+}
+$('#scanPause').onclick=()=>{SCAN.paused=!SCAN.paused;$('#scanPause').textContent=SCAN.paused?'계속':'일시정지'};
+$('#scanStop').onclick=()=>{SCAN.stop=true;SCAN.queue=[];SCAN.total=SCAN.done};
+async function analyzeFile(f,msg){
+  const dd=await fileDate(f),it={key:fileKey(f),name:f.name,type:isVideo(f)?'video':'image',date:dd.d.getTime(),dateSrc:dd.src,frames:[],iv:S.iv,dur:0};
+  const addFrame=async(cv,t)=>{const fc=await detectFaces(cv);if(!fc.length)return;
+    const th=toCanvas(cv,cv.width,cv.height,360);it.frames.push({t,thumb:await toBlob(th),w:th.width,h:th.height,faces:fc.map(x=>({box:x.box,desc:x.desc}))})};
+  if(it.type==='image'){const im=await loadImage(f);const cv=toCanvas(im,im.width,im.height,1280);im.close&&im.close();await addFrame(cv,0)}
+  else{const url=await openVideo(f);try{it.dur=vEl.duration;const iv=S.iv,n=Math.max(1,Math.min(600,Math.floor(it.dur/iv)));
+    for(let i=0;i<n&&!SCAN.stop;i++){while(SCAN.paused&&!SCAN.stop)await sleep(200);const t=Math.min(it.dur-0.05,(i+0.5)*it.dur/n);
+      await seek(vEl,t);await addFrame(toCanvas(vEl,vEl.videoWidth,vEl.videoHeight,960),t);if(i%4===0)msg(`${Math.round(i/n*100)}%`)}
+    if(SCAN.stop)throw new Error('중간에 멈춤')}finally{vEl.removeAttribute('src');vEl.load();URL.revokeObjectURL(url)}}
+  return it;
+}
+async function updateCache(){const n=items.size;$('#cacheInfo').textContent=n?`기기에 기억된 분석: ${n}개 파일`:''}
+$('#cacheClear').onclick=async()=>{if(!confirm('분석해 둔 기록을 모두 지울까요? (사진·영상 원본은 그대로예요)'))return;await tx('items','readwrite',s=>s.clear());items.clear();thumbURL.forEach(u=>URL.revokeObjectURL(u));thumbURL.clear();renderResults();updateCache()};
+
+/* ============ 3. 결과 ============ */
+function scoreFace(desc){
+  if(!REF.pos.length)return null;let dp=Infinity;for(const p of REF.pos){const d=dist(p.desc,desc);if(d<dp)dp=d}
+  let dn=Infinity;for(const n of REF.neg){const d=dist(n.desc,desc);if(d<dn)dn=d}
+  return{dp,ok:dp<S.thr&&!(dn<dp-0.01&&dn<0.45)};
+}
+function matchItem(it){
+  let best=null;const hits=[];
+  for(const fr of it.frames)for(const fc of fr.faces){const s=scoreFace(fc.desc);if(!s||!s.ok)continue;
+    if(!best||s.dp<best.d)best={d:s.dp,fr,fc};if(!hits.length||Math.abs(hits[hits.length-1].t-fr.t)>0.01){hits.push({t:fr.t,d:s.dp,fc})}else if(s.dp<hits[hits.length-1].d){hits[hits.length-1].d=s.dp}}
+  if(!best)return null;
+  // 붙어 있는 장면은 하나의 구간으로 묶기
+  const gap=Math.max(2.5,(it.iv||1.5)*2.2),segs=[];
+  for(const h of hits){const s=segs[segs.length-1];if(s&&h.t-s.b<=gap){s.b=h.t;if(h.d<s.d)s.d=h.d}else segs.push({a:h.t,b:h.t,d:h.d})}
+  return{best,hits,segs};
+}
+const segTxt=s=>s.b-s.a>0.5?`${fmtT(s.a)}~${fmtT(s.b)}`:fmtT(s.a);
+const tURL=fr=>{let u=thumbURL.get(fr);if(!u){u=URL.createObjectURL(fr.thumb);thumbURL.set(fr,u)}return u};
+const simPct=d=>Math.round(clamp((0.75-d)/0.45,0,1)*100);
+const WD=['일','월','화','수','목','금','토'];
+let SEL=new Set(),selMode=false,shown=[];
+function renderResults(){
+  const box=$('#results');
+  if(!REF.pos.length){box.innerHTML=`<div class="empty">${items.size?`분석된 사진·영상 ${items.size}개 · 찾을 아이를 먼저 정해주세요`:'찾을 아이를 정하고 사진·영상을 골라주세요'}</div>`;return}
+  const res=[];
+  for(const it of items.values()){if(S.type!=='all'&&it.type!==S.type)continue;const m=matchItem(it);if(m)res.push({it,...m})}
+  res.sort((a,b)=>S.sort==='new'?b.it.date-a.it.date:a.it.date-b.it.date);shown=res;
+  if(!res.length){box.innerHTML=`<div class="empty">아직 찾은 게 없어요${items.size?` (분석된 ${items.size}개 중)`:''}. 오른쪽(느슨)으로 조금 옮겨보세요.</div>`;return}
+  const days=new Map();for(const r of res){const d=new Date(r.it.date),k=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`;if(!days.has(k))days.set(k,[]);days.get(k).push(r)}
+  const nv=res.filter(r=>r.it.type==='video').length;
+  let h=`<div class="small" style="margin-top:8px">모두 ${res.length}개 · 사진 ${res.length-nv} · 영상 ${nv} · ${days.size}일</div>`;
+  for(const[k,arr]of days){h+=`<div class="day"><h3>${k}<span>${arr.length}개</span></h3><div class="rgrid">`;
+    for(const r of arr){const fr=r.best.fr,[x,y,w,hh]=r.best.fc.box;const ar=fr.w/fr.h;
+      // object-fit:cover 안에서 얼굴 상자 위치
+      const sx=ar>1?ar:1,sy=ar>1?1:1/ar,ox=(1-sx)/2,oy=(1-sy)/2;
+      const bx=`left:${(ox+x*sx)*100}%;top:${(oy+y*sy)*100}%;width:${w*sx*100}%;height:${hh*sy*100}%`;
+      const d=new Date(r.it.date);
+      const tag=r.it.type==='video'?`▶ ${r.segs.slice(0,2).map(segTxt).join(', ')}${r.segs.length>2?` 외 ${r.segs.length-2}`:''}`:`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      h+=`<div class="it${SEL.has(r.it.key)?' sel':''}" data-k="${encodeURIComponent(r.it.key)}"><img loading="lazy" src="${tURL(fr)}"><div class="bx" style="${bx}"></div><span class="tg">${tag}</span><span class="sc">${simPct(r.best.d)}%</span><span class="ck"></span></div>`}
+    h+='</div></div>'}
+  box.innerHTML=h;
+  $$('.it',box).forEach(el=>el.onclick=()=>{const k=decodeURIComponent(el.dataset.k);if(selMode){SEL.has(k)?SEL.delete(k):SEL.add(k);el.classList.toggle('sel');updSel()}else openViewer(k)});
+}
+let rT=0;const renderSoon=()=>{clearTimeout(rT);rT=setTimeout(renderResults,120)};
+$('#thr').value=S.thr;$('#thr').oninput=e=>{S.thr=+e.target.value;saveS();renderSoon()};
+function chipGroup(id,key,num){const g=$(id);$$('button',g).forEach(b=>{b.classList.toggle('on',String(S[key])===b.dataset.v);b.onclick=()=>{S[key]=num?+b.dataset.v:b.dataset.v;saveS();$$('button',g).forEach(x=>x.classList.toggle('on',x===b));renderResults()}})}
+chipGroup('#typeChips','type');chipGroup('#sortChips','sort');chipGroup('#ivChips','iv',true);
+
+/* 보기 */
+let cur=null;
+function openViewer(k){
+  const it=items.get(k),m=matchItem(it);if(!m)return;cur={it,m};const f=files.get(k),vb=$('#vwBox');vb.innerHTML='';
+  const d=new Date(it.date);
+  $('#vwInfo').textContent=`${it.name} · ${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} (${it.dateSrc}) · 닮은 정도 ${simPct(m.best.d)}%${f?'':' · 원본을 보려면 이 파일을 다시 골라주세요'}`;
+  const tm=$('#vwTimes');tm.innerHTML='';
+  if(f&&it.type==='video'){const v=document.createElement('video');v.controls=true;v.playsInline=true;v.src=URL.createObjectURL(f);v.currentTime=m.hits[0].t;vb.appendChild(v);
+    m.segs.forEach(q=>{const b=document.createElement('button');b.textContent='▶ '+segTxt(q);b.onclick=()=>{v.currentTime=Math.max(0,q.a-0.5);v.play()};tm.appendChild(b)})}
+  else if(it.type==='video'){m.segs.forEach(q=>{const b=document.createElement('span');b.className='small';b.style.marginRight='8px';b.textContent='▶ '+segTxt(q);tm.appendChild(b)})}
+  else if(f){const im=document.createElement('img');im.src=URL.createObjectURL(f);vb.appendChild(im)}
+  else{const im=document.createElement('img');im.src=tURL(m.best.fr);vb.appendChild(im)}
+  $('#vwCmp').style.display=f&&it.type==='video'?'':'none';
+  $('#vwShare').style.display=f&&navigator.canShare&&navigator.canShare({files:[f]})?'':'none';
+  $('#viewer').classList.add('on');
+}
+function closeViewer(){$('#viewer').classList.remove('on');const m=$('#vwBox video,#vwBox img');
+  if(m){try{m.pause&&m.pause()}catch(e){}if(m.src.startsWith('blob:')&&![...thumbURL.values()].includes(m.src))URL.revokeObjectURL(m.src)}$('#vwBox').innerHTML=''}
+$('#vwClose').onclick=closeViewer;$('#viewer').onclick=e=>{if(e.target.id==='viewer')closeViewer()};
+$('#vwYes').onclick=async()=>{if(!cur)return;for(const h of cur.m.hits.slice(0,3)){const fc=h.fc;if(!REF.pos.some(p=>dist(p.desc,fc.desc)<0.12)&&REF.pos.length<60)REF.pos.push({desc:fc.desc,thumb:await faceThumb(cur.m.best.fr,fc)})}
+  await saveRef();renderRef();closeViewer();renderResults()};
+$('#vwNo').onclick=async()=>{if(!cur)return;for(const h of cur.m.hits)REF.neg.push({desc:h.fc.desc});await saveRef();renderRef();closeViewer();renderResults()};
+$('#vwShare').onclick=()=>{const f=cur&&files.get(cur.it.key);if(f)navigator.share({files:[f]}).catch(()=>{})};
+async function faceThumb(fr,fc){const im=await createImageBitmap(fr.thumb);const c=document.createElement('canvas');c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0);return cropFace(c,fc.box,96).toDataURL('image/jpeg',0.8)}
+
+/* 골라서 보내기 */
+function updSel(){$('#selCnt').textContent=`${SEL.size}개 선택`}
+$('#selBtn').onclick=()=>{selMode=!selMode;$('#pageFind').classList.toggle('selmode',selMode);$('#selBtn').textContent=selMode?'고르기 끝':'골라서 보내기';if(!selMode){SEL.clear();renderResults()}updSel()};
+$('#selCancel').onclick=()=>$('#selBtn').onclick();
+$('#selAll').onclick=()=>{const all=shown.every(r=>SEL.has(r.it.key));shown.forEach(r=>all?SEL.delete(r.it.key):SEL.add(r.it.key));renderResults();updSel()};
+$('#selShare').onclick=async()=>{
+  const fs=[...SEL].map(k=>files.get(k)).filter(Boolean);
+  if(!fs.length){alert('공유하려면 이번에 고른 파일이어야 해요. 2번에서 그 사진·영상을 다시 골라주세요.');return}
+  if(fs.length<SEL.size)alert(`${SEL.size-fs.length}개는 원본이 없어서 빼고 보내요 (2번에서 다시 고르면 같이 보낼 수 있어요)`);
+  if(navigator.canShare&&navigator.canShare({files:fs})){try{await navigator.share({files:fs,title:REF.name||'찾은 사진·영상'})}catch(e){}}
+  else{for(const f of fs){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click();await sleep(300)}}
+};
+
+/* ============ 시작 ============ */
+(async()=>{
+  const r=await kvGet('ref');if(r){REF={name:r.name||'',pos:(r.pos||[]).map(p=>({desc:new Float32Array(p.desc),thumb:p.thumb})),neg:(r.neg||[]).map(p=>({desc:new Float32Array(p.desc)}))};$('#refName').value=REF.name}
+  const all=await dbAll();if(all)for(const it of all)items.set(it.key,it);
+  renderRef();renderResults();updateCache();
+})();
+/* ============ 동작 비교 탭과 연결 ============ */
+window.FaceAPI={ready:engineReady,detect:detectFaces,hasRef:()=>REF.pos.length>0,name:()=>REF.name,thr:()=>S.thr,
+  score:desc=>{const s=scoreFace(desc);return s&&s.ok?s.dp:(s?s.dp+1:null)}};
+$('#vwCmpA').onclick=()=>toCmp(0);$('#vwCmpB').onclick=()=>toCmp(1);
+function toCmp(slot){const f=cur&&files.get(cur.it.key);if(!f)return;closeViewer();dispatchEvent(new CustomEvent('to-compare',{detail:{file:f,slot}}))}
+
+/* ============ ZIP 저장 (원본 그대로, 압축 안 함) ============ */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+let zipCancel=false;
+async function crcFile(f,onp){let c=0xFFFFFFFF;const CH=8<<20;
+  for(let o=0;o<f.size;o+=CH){if(zipCancel)throw new Error('cancel');const b=new Uint8Array(await f.slice(o,o+CH).arrayBuffer());
+    for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);onp(o+b.length);await sleep(0)}
+  return(c^0xFFFFFFFF)>>>0}
+const setU64=(dv,p,v)=>{dv.setUint32(p,v%4294967296,true);dv.setUint32(p+4,Math.floor(v/4294967296),true)};
+function dosTime(ms){const d=new Date(ms);return{t:(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),d:(Math.max(0,d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate()}}
+async function buildZip(entries,onp,force64){
+  const total=entries.reduce((a,e)=>a+e.file.size,0),z64=force64||total>0xF0000000;
+  const parts=[],cd=[],enc=new TextEncoder();let off=0,done=0;
+  for(const e of entries){
+    const crc=await crcFile(e.file,b=>onp(done+b,total));done+=e.file.size;
+    const nm=enc.encode(e.name),{t,d}=dosTime(e.date),sz=e.file.size,ex=z64?20:0;
+    const h=new DataView(new ArrayBuffer(30+nm.length+ex));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,z64?45:20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,t,true);h.setUint16(12,d,true);
+    h.setUint32(14,crc,true);h.setUint32(18,z64?0xFFFFFFFF:sz,true);h.setUint32(22,z64?0xFFFFFFFF:sz,true);h.setUint16(26,nm.length,true);h.setUint16(28,ex,true);
+    new Uint8Array(h.buffer).set(nm,30);
+    if(z64){const p=30+nm.length;h.setUint16(p,1,true);h.setUint16(p+2,16,true);setU64(h,p+4,sz);setU64(h,p+12,sz)}
+    parts.push(h.buffer,e.file);cd.push({nm,crc,sz,off,t,d});off+=h.byteLength+sz;
+  }
+  const cdStart=off;
+  for(const c of cd){const ex=z64?28:0,h=new DataView(new ArrayBuffer(46+c.nm.length+ex));
+    h.setUint32(0,0x02014b50,true);h.setUint16(4,45,true);h.setUint16(6,z64?45:20,true);h.setUint16(8,0x0800,true);h.setUint16(10,0,true);h.setUint16(12,c.t,true);h.setUint16(14,c.d,true);
+    h.setUint32(16,c.crc,true);h.setUint32(20,z64?0xFFFFFFFF:c.sz,true);h.setUint32(24,z64?0xFFFFFFFF:c.sz,true);h.setUint16(28,c.nm.length,true);h.setUint16(30,ex,true);
+    h.setUint32(42,z64?0xFFFFFFFF:c.off,true);new Uint8Array(h.buffer).set(c.nm,46);
+    if(z64){const p=46+c.nm.length;h.setUint16(p,1,true);h.setUint16(p+2,24,true);setU64(h,p+4,c.sz);setU64(h,p+12,c.sz);setU64(h,p+20,c.off)}
+    parts.push(h.buffer);off+=h.byteLength}
+  const cdSize=off-cdStart;
+  if(z64){const r=new DataView(new ArrayBuffer(56));r.setUint32(0,0x06064b50,true);setU64(r,4,44);r.setUint16(12,45,true);r.setUint16(14,45,true);
+    setU64(r,24,cd.length);setU64(r,32,cd.length);setU64(r,40,cdSize);setU64(r,48,cdStart);
+    const l=new DataView(new ArrayBuffer(20));l.setUint32(0,0x07064b50,true);setU64(l,8,off);l.setUint32(16,1,true);parts.push(r.buffer,l.buffer)}
+  const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,z64?0xFFFF:cd.length,true);e.setUint16(10,z64?0xFFFF:cd.length,true);
+  e.setUint32(12,z64?0xFFFFFFFF:cdSize,true);e.setUint32(16,z64?0xFFFFFFFF:cdStart,true);parts.push(e.buffer);
+  return new Blob(parts,{type:'application/zip'});
+}
+let zipURL=null;
+$('#zipBtn').onclick=async()=>{
+  const list=(selMode&&SEL.size?[...SEL].map(k=>items.get(k)):shown.map(r=>r.it)).filter(Boolean);
+  if(!list.length){alert('저장할 사진·영상이 없어요. 먼저 아이를 찾아주세요.');return}
+  const have=list.filter(it=>files.has(it.key)),miss=list.length-have.length;
+  if(!have.length){alert('원본 파일이 있어야 저장할 수 있어요. 2번에서 그 사진·영상을 다시 골라주세요.');return}
+  if(miss&&!confirm(`${miss}개는 이번에 고른 원본이 없어서 빼고 ${have.length}개만 저장할까요?\n(2번에서 다시 고르면 같이 저장돼요)`))return;
+  const now=new Date(),day=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`,folder=`found_${day}/`,used=new Set();
+  const entries=have.sort((a,b)=>a.date-b.date).map(it=>{const f=files.get(it.key),d=new Date(it.date);
+    const ext=((f.name.match(/\.[A-Za-z0-9]{1,5}$/)||[''])[0]||(it.type==='video'?'.mp4':'.jpg')).toLowerCase();
+    const base=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    let nm=base+ext,k=2;while(used.has(nm))nm=`${base}_${k++}${ext}`;used.add(nm);return{name:folder+nm,file:f,date:it.date}});
+  zipCancel=false;$('#zTitle').textContent=`ZIP 만드는 중… (${entries.length}개)`;$('#zSave').style.display='none';$('#zClose').textContent='취소';$('#zBar').style.width='0';$('#zipModal').classList.add('on');
+  try{
+    const blob=await buildZip(entries,(b,t)=>{$('#zBar').style.width=(b/t*100).toFixed(1)+'%';$('#zTxt').textContent=`${(b/1048576).toFixed(0)} / ${(t/1048576).toFixed(0)}MB 확인 중`},!!window.__zipForce64);
+    if(zipURL)URL.revokeObjectURL(zipURL);zipURL=URL.createObjectURL(blob);
+    const zn=`found_${day}_${pad(now.getHours())}${pad(now.getMinutes())}.zip`;
+    $('#zTitle').textContent='ZIP 완성!';$('#zBar').style.width='100%';
+    $('#zTxt').textContent=`${zn} · ${entries.length}개 · ${(blob.size/1048576).toFixed(1)}MB · 원본 화질·프레임 그대로`;
+    const a=$('#zSave');a.href=zipURL;a.download=zn;a.style.display='';$('#zClose').textContent='닫기';a.click();
+  }catch(e){if(String(e.message)==='cancel'){$('#zipModal').classList.remove('on');return}console.error(e);$('#zTitle').textContent='ZIP을 만들지 못했어요';$('#zTxt').textContent=String(e.message||e);$('#zClose').textContent='닫기'}
+};
+$('#zClose').onclick=()=>{zipCancel=true;$('#zipModal').classList.remove('on')};
+
+window.__ff={items,files,REF:()=>REF,S};
+</script>
 <script type="module">
 /* =========================================================
    동작 비교 분석기 — 단일 파일 웹앱
@@ -304,7 +803,7 @@ const fmtT=t=>{if(!isFinite(t)||t<0)t=0;const m=Math.floor(t/60),s=t-m*60;return
 
 /* ---------------- 설정 ---------------- */
 const DEF={stab:'person',strength:3,psize:1,ref:0,sync:'dtw',nudge:0,layout:'side',aspect:'9:16',alpha:0.5,skel:false,
-  stampOn:true,stampFmt:'dot',stampColor:'#ffa133',stampSize:1,stampLabel:true,expH:1280,expSpeed:1,expExact:false};
+  stampOn:true,stampFmt:'dot',stampColor:'#ffa133',stampSize:1,stampLabel:true,expH:1280,expSpeed:1,expExact:false,follow:true};
 const S=Object.assign({},DEF);
 try{const o=JSON.parse(localStorage.getItem('motion-compare-settings')||'{}');for(const k in DEF)if(k in o&&k!=='nudge')S[k]=o[k]}catch(e){}
 const saveS=()=>{try{localStorage.setItem('motion-compare-settings',JSON.stringify(S))}catch(e){}};
@@ -319,8 +818,9 @@ let dtwMap=null; // null = 아직, false = 불가, {tr,to}
 /* ---------------- 사람 인식 (MediaPipe) ---------------- */
 let poseLM=null, poseTs=0;
 const MP_VER='0.10.14';
-const poseReady=(async()=>{
-  const el=$('#poseState');
+let poseP=null;
+const ensurePose=()=>poseP||(poseP=(async()=>{
+  const el=$('#poseState');el.textContent='사람 인식 준비 중…';
   try{
     let mod=null;
     for(const u of [`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`,`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/+esm`]){
@@ -329,7 +829,7 @@ const poseReady=(async()=>{
     if(!mod) throw new Error('import');
     const fs=await mod.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
     const opt=d=>({baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',delegate:d},
-      runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:0.4,minPosePresenceConfidence:0.4,minTrackingConfidence:0.4});
+      runningMode:'VIDEO',numPoses:4,minPoseDetectionConfidence:0.4,minPosePresenceConfidence:0.4,minTrackingConfidence:0.4});
     try{poseLM=await mod.PoseLandmarker.createFromOptions(fs,opt('GPU'))}
     catch(e){console.warn('GPU 실패, CPU로',e);poseLM=await mod.PoseLandmarker.createFromOptions(fs,opt('CPU'))}
     el.textContent='사람 인식 준비됨';el.className='pose ok';
@@ -337,7 +837,7 @@ const poseReady=(async()=>{
     console.warn(e);poseLM=null;el.textContent='사람 인식 불가 · 흔들림 보정만';el.className='pose err';
   }
   refreshNotes();
-})();
+})());
 
 /* ---------------- 영상 카드 ---------------- */
 function cardHTML(i){return `
@@ -537,14 +1037,20 @@ async function analyze(c){
   if(!c.W){c.busy=false;return}
   pause();c.busy=true;c.cancel=false;c.ana=null;c.trk=null;dtwMap=null;
   setStatus(c,'사람 인식 준비 기다리는 중…','run',0);
-  await Promise.race([poseReady,sleep(30000)]);
+  await Promise.race([ensurePose(),sleep(30000)]);
   const PL=window.__poseHook||poseLM,usePose=!!PL,v=c.v;
   const aw=240,ah=Math.max(16,Math.round(aw*c.H/c.W/4)*4);
   const acv=document.createElement('canvas');acv.width=aw;acv.height=ah;const actx=acv.getContext('2d',{willReadFrequently:true});
   const pw=320,ph=Math.round(pw*c.H/c.W);
   const pcv=document.createElement('canvas');pcv.width=pw;pcv.height=ph;const pctx=pcv.getContext('2d');
-  const samples=[];let prev=null,lastT=-1;poseTs+=2000;
-  const proc=t=>{
+  const samples=[];let prev=null,lastT=-1,prevHip=null,lastFaceT=-9,locked=false;poseTs+=2000;
+  // 찾은 아이만 따라가기: 아이 찾기 탭의 기준 얼굴로 여러 명 중 그 아이를 고름
+  const FAc=window.FaceAPI,follow=!!(S.follow&&FAc&&FAc.hasRef()&&usePose);
+  let faceOK=false;if(follow){try{faceOK=!!(await Promise.race([FAc.ready,sleep(20000)]))}catch(e){}}
+  c.followInfo={on:follow&&faceOK,hits:0};
+  const fk=Math.min(1,720/Math.max(c.W,c.H)),fcv=document.createElement('canvas');fcv.width=Math.round(c.W*fk);fcv.height=Math.round(c.H*fk);const fctx=fcv.getContext('2d');
+  const hipOf=lm=>({x:(lm[23].x+lm[24].x)/2,y:(lm[23].y+lm[24].y)/2,h:Math.abs((lm[11].y+lm[12].y)/2-(lm[23].y+lm[24].y)/2)});
+  const proc=async t=>{
     if(t<=lastT+1e-4)return;
     actx.drawImage(v,0,0,aw,ah);
     const g=toGray(actx.getImageData(0,0,aw,ah).data,aw*ah);
@@ -553,17 +1059,38 @@ async function analyze(c){
     if(usePose){
       pctx.drawImage(v,0,0,pw,ph);
       poseTs+=Math.max(1,Math.round((lastT<0?0.033:t-lastT)*1000));
-      try{const r=PL.detectForVideo(pcv,poseTs);const lm=r&&r.landmarks&&r.landmarks[0];
-        if(lm){pose=new Float32Array(66);let x0=1,y0=1,x1=0,y1=0;
-          for(let k=0;k<33;k++){pose[2*k]=lm[k].x;pose[2*k+1]=lm[k].y;
-            if((lm[k].visibility??1)>0.3){x0=Math.min(x0,lm[k].x);x1=Math.max(x1,lm[k].x);y0=Math.min(y0,lm[k].y);y1=Math.max(y1,lm[k].y)}}
-          if(x1>x0){const ex=(x1-x0)*0.25+0.03,ey=(y1-y0)*0.12+0.03;bbox=[(x0-ex)*aw,(y0-ey)*ah,(x1+ex)*aw,(y1+ey)*ah]}}
-      }catch(e){console.warn(e)}
+      let lms=[];
+      try{const r=PL.detectForVideo(pcv,poseTs);lms=(r&&r.landmarks)||[]}catch(e){console.warn(e)}
+      // 사람이 있는 곳은 모두 흔들림 계산에서 빼기
+      for(const lm of lms){let x0=1,y0=1,x1=0,y1=0;
+        for(const p of lm)if((p.visibility??1)>0.3){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)}
+        if(x1>x0){const ex=(x1-x0)*0.25+0.03,ey=(y1-y0)*0.12+0.03,b=[(x0-ex)*aw,(y0-ey)*ah,(x1+ex)*aw,(y1+ey)*ah];
+          bbox=bbox?[Math.min(bbox[0],b[0]),Math.min(bbox[1],b[1]),Math.max(bbox[2],b[2]),Math.max(bbox[3],b[3])]:b}}
+      let ch=null;
+      if(lms.length){
+        // 얼굴로 확인 (0.5초마다, 아직 못 찾았으면 매번)
+        if(follow&&faceOK&&(t-lastFaceT>=0.5||!locked)){
+          lastFaceT=t;fctx.drawImage(v,0,0,fcv.width,fcv.height);
+          try{const fs=await FAc.detect(fcv);let best=null;
+            for(const f of fs){const d=FAc.score(f.desc);if(d!=null&&d<FAc.thr()+0.04&&(!best||d<best.d))best={d,f}}
+            if(best){const[bx,by,bw,bh]=best.f.box,cx=bx+bw/2,cy=by+bh/2;let bd=Infinity,bl=null;
+              for(const lm of lms){const d=Math.hypot(lm[0].x-cx,(lm[0].y-cy)*c.H/c.W);if(d<bd){bd=d;bl=lm}}
+              if(bd<Math.max(bw,bh)*1.6){ch=bl;locked=true;c.followInfo.hits++}}
+          }catch(e){console.warn(e)}
+        }
+        // 얼굴이 안 보이면 바로 전 위치와 가장 가까운 사람
+        if(!ch&&prevHip){let bd=Infinity,bl=null;for(const lm of lms){const h=hipOf(lm),d=Math.hypot(h.x-prevHip.x,h.y-prevHip.y);if(d<bd){bd=d;bl=lm}}
+          if(!(follow&&faceOK&&locked&&bd>0.22))ch=bl}
+        // 처음에는 가장 크게 보이는 사람
+        if(!ch&&!(follow&&faceOK&&locked)){let bh=-1;for(const lm of lms){const h=hipOf(lm).h;if(h>bh){bh=h;ch=lm}}}
+      }
+      if(ch){prevHip=hipOf(ch);pose=new Float32Array(66);for(let k=0;k<33;k++){pose[2*k]=ch[k].x;pose[2*k+1]=ch[k].y}}
     }
     const m=prev?estimate(prev,pyr,bbox):{dx:0,dy:0,da:0,ds:0,act:0,n:0};
     samples.push({t,dx:m.dx,dy:m.dy,da:m.da,ds:m.ds,act:m.act,pose});
     prev=pyr;lastT=t;
   };
+
   setStatus(c,'분석 중 0%','run',0);
   await seek(v,0);
   const ok='requestVideoFrameCallback' in HTMLVideoElement.prototype&&await playScan(c,proc);
@@ -579,7 +1106,7 @@ async function analyze(c){
   if(!c.autoTrimmed){autoTrim(c);c.autoTrimmed=true}
   c.busy=false;
   const pr=c.ana.poseRatio;
-  setStatus(c,`분석 완료 · ${usePose?(pr>0.3?`사람 인식 ${Math.round(pr*100)}%`:'사람을 거의 못 찾음'):'흔들림 보정만'} · 동작 구간 자동 설정`,'ok');
+  setStatus(c,`분석 완료${c.followInfo&&c.followInfo.on?` · 아이 얼굴 확인 ${c.followInfo.hits}번`:''} · ${usePose?(pr>0.3?`사람 인식 ${Math.round(pr*100)}%`:'사람을 거의 못 찾음'):'흔들림 보정만'} · 동작 구간 자동 설정`,'ok');
   await seek(v,c.trimS);
   renderCard(c);updateScrub();updateSyncInfo();refreshNotes();P.dirty=true;
 }
@@ -588,10 +1115,10 @@ function playScan(c,fn){
   return new Promise(async res=>{
     let done=false,rate=1.5,winWall=performance.now(),winMedia=null,winCnt=0,lastCb=performance.now(),got=0;
     const finish=r=>{if(done)return;done=true;clearInterval(wd);v.pause();res(r)};
-    const cb=(now,meta)=>{
+    const cb=async(now,meta)=>{
       if(done)return;if(c.cancel){finish(true);return}
       lastCb=performance.now();got++;const t=meta.mediaTime;
-      try{fn(t)}catch(e){console.error(e)}
+      try{await fn(t)}catch(e){console.error(e)}
       winCnt++;if(winMedia===null)winMedia=t;
       const wall=performance.now();
       if(wall-winWall>1500){const md=t-winMedia,pf=md>0?winCnt/md:30;
@@ -611,7 +1138,7 @@ function playScan(c,fn){
 }
 async function seekScan(c,fn){
   const step=1/15;
-  for(let t=0;t<c.dur&&!c.cancel;t+=step){await seek(c.v,t);fn(c.v.currentTime);setStatus(c,`분석 중 ${Math.round(t/c.dur*100)}%`,'run',t/c.dur)}
+  for(let t=0;t<c.dur&&!c.cancel;t+=step){await seek(c.v,t);await fn(c.v.currentTime);setStatus(c,`분석 중 ${Math.round(t/c.dur*100)}%`,'run',t/c.dur)}
 }
 
 /* ---------------- 궤적 / 보정 ---------------- */
@@ -764,12 +1291,14 @@ function updateSyncInfo(){
 
 /* ---------------- 그리기 ---------------- */
 const BONES=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32],[27,29],[28,30],[15,19],[16,20]];
+const LY=()=>(clips[0].W>0)!==(clips[1].W>0)?'single':S.layout;
 function aspectNum(){const[a,b]=S.aspect.split(':').map(Number);return a/b}
 function dimsFor(ph){const ar=aspectNum();ph=Math.round(ph/8)*8;const pw=Math.round(ph*ar/8)*8;
-  if(S.layout==='side')return{W:pw*2,H:ph,ph,pw};if(S.layout==='stack')return{W:pw,H:ph*2,ph,pw};return{W:pw,H:ph,ph,pw}}
+  const L=LY();if(L==='side')return{W:pw*2,H:ph,ph,pw};if(L==='stack')return{W:pw,H:ph*2,ph,pw};return{W:pw,H:ph,ph,pw}}
 function panels(d){
-  if(S.layout==='side')return[[0,0,0,d.pw,d.ph],[1,d.pw,0,d.pw,d.ph]];
-  if(S.layout==='stack')return[[0,0,0,d.pw,d.ph],[1,0,d.ph,d.pw,d.ph]];
+  const L=LY();if(L==='single')return[[clips[0].W?0:1,0,0,d.pw,d.ph]];
+  if(L==='side')return[[0,0,0,d.pw,d.ph],[1,d.pw,0,d.pw,d.ph]];
+  if(L==='stack')return[[0,0,0,d.pw,d.ph],[1,0,d.ph,d.pw,d.ph]];
   return[[0,0,0,d.pw,d.ph],[1,0,0,d.pw,d.ph]];
 }
 function drawPanel(ctx,c,t,x,y,w,h,alpha){
@@ -810,13 +1339,13 @@ function drawStamp(ctx,c,x,y,h,line,dot){
 function compose(ctx,d,times){
   ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.fillStyle='#0b0c0f';ctx.fillRect(0,0,d.W,d.H);
   const T=i=>times&&times[i]!=null?times[i]:clips[i].v.currentTime;
-  const ov=S.layout==='overlay';
+  const L=LY(),ov=L==='overlay';
   for(const[i,x,y,w,h]of panels(d)){
     if(ov&&i===1&&!clips[1].W)continue;
     drawPanel(ctx,clips[i],T(i),x,y,w,h,ov&&i===1&&clips[0].W?S.alpha:1);
   }
-  if(S.layout==='side'){ctx.fillStyle='#0b0c0f';ctx.fillRect(d.pw-1,0,2,d.H)}
-  if(S.layout==='stack'){ctx.fillStyle='#0b0c0f';ctx.fillRect(0,d.ph-1,d.W,2)}
+  if(L==='side'){ctx.fillStyle='#0b0c0f';ctx.fillRect(d.pw-1,0,2,d.H)}
+  if(L==='stack'){ctx.fillStyle='#0b0c0f';ctx.fillRect(0,d.ph-1,d.W,2)}
   if(ov){drawStamp(ctx,clips[0],0,0,d.ph,0,true);drawStamp(ctx,clips[1],0,0,d.ph,1,true)}
   else for(const[i,x,y,w,h]of panels(d))drawStamp(ctx,clips[i],x,y,h,0,false);
 }
@@ -888,13 +1417,13 @@ $('#scrub').oninput=e=>{if(busy())return;const R=refC();if(!R)return;pause();con
 $$('#speedChips button').forEach(b=>b.onclick=()=>{P.speed=+b.dataset.v;$$('#speedChips button').forEach(x=>x.classList.toggle('on',x===b));const R=refC();if(P.playing&&R){R.v.playbackRate=P.speed}});
 $('#loopChk').onchange=e=>P.loop=e.target.checked;
 $('#soundChk').onchange=e=>{P.sound=e.target.checked;const R=refC();if(R)R.v.muted=!P.sound};
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.target.type!=='range')return;
+addEventListener('keydown',e=>{if($('#pageCmp').hidden)return;if(e.target.tagName==='INPUT'&&e.target.type!=='range')return;
   if(e.code==='Space'){e.preventDefault();P.playing?pause():play()}else if(e.code==='ArrowRight'){e.preventDefault();step(1)}else if(e.code==='ArrowLeft'){e.preventDefault();step(-1)}});
 
 // 화면 끌기 / 확대
 const ptrs=new Map();let gest=null;
 function panelAt(ev){const r=view.getBoundingClientRect(),x=(ev.clientX-r.left)/r.width*vd.W,y=(ev.clientY-r.top)/r.height*vd.H;
-  if(S.layout==='overlay')return clips[1].W?1:0;if(S.layout==='side')return x<vd.pw?0:1;return y<vd.ph?0:1}
+  const L=LY();if(L==='single')return clips[0].W?0:1;if(L==='overlay')return clips[1].W?1:0;if(L==='side')return x<vd.pw?0:1;return y<vd.ph?0:1}
 const cssPH=()=>view.getBoundingClientRect().height*(vd.ph/vd.H);
 view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===1)gest={ci:panelAt(e)};else if(ptrs.size===2){const[a,b]=[...ptrs.values()];gest.d0=Math.hypot(a.x-b.x,a.y-b.y);gest.z0=clips[gest.ci].man.z}});
@@ -936,6 +1465,7 @@ $('#swapBtn').onclick=async()=>{
   onSetting('ref');
 };
 function refreshNotes(){
+  {const fn=$('#followNote'),FA=window.FaceAPI;if(fn)fn.textContent=FA&&FA.hasRef()?`'${FA.name()||'찾은 아이'}' 얼굴로 여러 명 중 그 아이만 따라가요. 켜고 끄거나 아이를 바꾸면 [다시 분석]을 눌러주세요.`:'아이 찾기 탭에서 아이를 정해두면, 여러 명이 찍힌 영상에서도 그 아이만 따라가요. (안 정하면 처음 가장 크게 보이는 사람을 계속 따라가요)'}
   const n=$('#stabNote'),anyAna=clips.some(c=>c.ana),noPose=anyAna&&clips.some(c=>c.ana&&c.ana.poseRatio<0.3);
   if(S.stab==='person'){
     if(!poseLM&&$('#poseState').classList.contains('err')){n.className='note warn';n.textContent='사람 인식 모델을 불러오지 못해서(인터넷 필요) 흔들림 보정으로 대신하고 있어요. 크기는 화면을 두 손가락으로 벌려 맞춰주세요.'}
@@ -1124,32 +1654,33 @@ $('#expBtn').onclick=async()=>{
 $('#mCancel').onclick=()=>{if(EXP.on)EXP.cancel=true;else mModal.classList.remove('on');$('#mCancel').textContent='취소'};
 $('#mClose').onclick=()=>{mModal.classList.remove('on');$('#mVideo').pause()};
 
-/* ---------------- 앱 설치 ---------------- */
-(()=>{
-  const btn=$('#installBtn'),tip=$('#installTip');
-  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
-  if(location.protocol.startsWith('http')&&'serviceWorker' in navigator){
-    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e));
-  }
-  if(standalone)return;
-  let deferred=null;
-  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;btn.style.display='';tip.style.display='none'});
-  btn.onclick=async()=>{
-    if(deferred){deferred.prompt();const r=await deferred.userChoice;if(r.outcome==='accepted')btn.style.display='none';deferred=null;return}
-    tip.style.display=tip.style.display==='none'?'':'none';
-  };
-  addEventListener('appinstalled',()=>{btn.style.display='none';tip.style.display='none'});
-  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-  const tipTxt=ios?'📲 앱으로 설치하기: Safari 아래쪽 [공유] 버튼 → [홈 화면에 추가]를 누르세요.'
-    :'📲 앱으로 설치하기: 크롬 오른쪽 위 [⋮] 메뉴 → [앱 설치] 또는 [홈 화면에 추가]를 누르세요.';
-  tip.textContent=tipTxt;
-  // 설치 창이 바로 안 뜨는 브라우저(아이폰 등)는 안내 버튼을 보여줌
-  setTimeout(()=>{if(!deferred){btn.style.display='';btn.textContent='📲 설치 방법'}},2500);
-})();
-
 /* ---------------- 시작 ---------------- */
 syncControls();refreshNotes();resizeView();updateSyncInfo();requestAnimationFrame(tick);
+addEventListener('ref-changed',()=>refreshNotes());
+window.CMP={ensurePose,resize:resizeView,load:(file,slot)=>{loadFile(clips[slot],file)}};
 window.__mc={clips,S,P,EXP,mapT,computeDTW,get dtwMap(){return dtwMap}}; // 점검용
+</script>
+<script type="module">/* ============ 탭 전환 / 앱 설치 ============ */
+const $=s=>document.querySelector(s);
+function showPage(p){
+  $('#pageFind').hidden=p!=='find';$('#pageCmp').hidden=p!=='cmp';
+  document.querySelectorAll('#ptabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
+  try{localStorage.setItem('video-analyzer-page',p)}catch(e){}
+  if(p==='cmp'){window.CMP&&window.CMP.ensurePose();setTimeout(()=>dispatchEvent(new Event('resize')),30)}
+}
+document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>showPage(b.dataset.p));
+addEventListener('to-compare',e=>{showPage('cmp');scrollTo({top:0,behavior:'smooth'});const go=()=>window.CMP?window.CMP.load(e.detail.file,e.detail.slot):setTimeout(go,200);go()});
+try{const p=localStorage.getItem('video-analyzer-page');if(p==='cmp')showPage('cmp')}catch(e){}
+
+(()=>{const btn=$('#installBtn'),tip=$('#installTip');
+  if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)return;let dp=null;
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;btn.style.display='';btn.textContent='📲 앱 설치'});
+  btn.onclick=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;btn.style.display='none';return}tip.style.display=tip.style.display==='none'?'':'none'};
+  addEventListener('appinstalled',()=>{btn.style.display='none';tip.style.display='none'});
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  tip.textContent=ios?'📲 Safari 아래쪽 [공유] → [홈 화면에 추가]를 누르세요.':'📲 크롬 오른쪽 위 [⋮] → [앱 설치] 또는 [홈 화면에 추가]를 누르세요.';
+  setTimeout(()=>{if(!dp){btn.style.display='';btn.textContent='📲 설치 방법'}},2500)})();
 </script>
 </body>
 </html>

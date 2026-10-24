@@ -1,6 +1,6 @@
-// 동작 비교 분석기 - 오프라인/설치용 서비스 워커
-const APP = 'motion-compare-v1';
-const LIB = 'motion-compare-lib-v1';
+// 아이 영상 분석기 - 오프라인/설치용 서비스 워커
+const APP = 'video-analyzer-v1';
+const LIB = 'video-analyzer-lib-v1';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
