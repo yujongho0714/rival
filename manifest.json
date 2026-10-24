@@ -1,0 +1,18 @@
+{
+  "name": "동작 비교 분석기",
+  "short_name": "동작비교",
+  "description": "두 영상을 나란히 놓고 흔들림 보정·크기·속도를 맞춰 비교하고 날짜 스탬프와 함께 영상으로 내보내는 앱",
+  "lang": "ko",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d0f13",
+  "theme_color": "#0d0f13",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

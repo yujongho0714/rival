@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>동작 비교 분석기</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0f13">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="동작비교">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 :root{
   --bg:#0d0f13;--panel:#161920;--panel2:#1e222b;--line:#2a2f3a;--text:#eceff4;--muted:#8d95a5;
@@ -116,7 +124,9 @@ input[type=range]{accent-color:var(--a);height:26px}
     <div class="logo">▶</div>
     <h1>동작 비교 분석기</h1>
     <span class="pose" id="poseState">사람 인식 준비 중…</span>
+    <button class="btn pri" id="installBtn" style="display:none">📲 앱 설치</button>
   </header>
+  <div class="note" id="installTip" style="display:none"></div>
   <div class="steps"><span>① 영상 A·B 올리기</span><span>② 자동 분석 (흔들림·사람·동작 구간)</span><span>③ 재생해서 비교</span><span>④ 영상으로 내보내기</span></div>
 
   <div class="grid">
@@ -1113,6 +1123,29 @@ $('#expBtn').onclick=async()=>{
 };
 $('#mCancel').onclick=()=>{if(EXP.on)EXP.cancel=true;else mModal.classList.remove('on');$('#mCancel').textContent='취소'};
 $('#mClose').onclick=()=>{mModal.classList.remove('on');$('#mVideo').pause()};
+
+/* ---------------- 앱 설치 ---------------- */
+(()=>{
+  const btn=$('#installBtn'),tip=$('#installTip');
+  const standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+  if(location.protocol.startsWith('http')&&'serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e));
+  }
+  if(standalone)return;
+  let deferred=null;
+  addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;btn.style.display='';tip.style.display='none'});
+  btn.onclick=async()=>{
+    if(deferred){deferred.prompt();const r=await deferred.userChoice;if(r.outcome==='accepted')btn.style.display='none';deferred=null;return}
+    tip.style.display=tip.style.display==='none'?'':'none';
+  };
+  addEventListener('appinstalled',()=>{btn.style.display='none';tip.style.display='none'});
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const tipTxt=ios?'📲 앱으로 설치하기: Safari 아래쪽 [공유] 버튼 → [홈 화면에 추가]를 누르세요.'
+    :'📲 앱으로 설치하기: 크롬 오른쪽 위 [⋮] 메뉴 → [앱 설치] 또는 [홈 화면에 추가]를 누르세요.';
+  tip.textContent=tipTxt;
+  // 설치 창이 바로 안 뜨는 브라우저(아이폰 등)는 안내 버튼을 보여줌
+  setTimeout(()=>{if(!deferred){btn.style.display='';btn.textContent='📲 설치 방법'}},2500);
+})();
 
 /* ---------------- 시작 ---------------- */
 syncControls();refreshNotes();resizeView();updateSyncInfo();requestAnimationFrame(tick);
